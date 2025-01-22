@@ -45,5 +45,16 @@ jobs:
         # Use sqlcmd to connect to the SQL Server and execute a query
         sqlcmd -S $SQL_SERVER -U $SQL_USER -P $SQL_PASSWORD -d $SQL_DATABASE -Q "SELECT * FROM Sites FOR JSON AUTO;" -o result.json
         
-        # Check the output by displaying the content of the result.json file
-        cat result.json
+        # Check if the result.json file was created successfully
+        if (Test-Path ./result.json) {
+          Write-Host "The result.json file was created successfully."
+        } else {
+          Write-Host "The result.json file could not be created."
+          exit 1 # Exit the script with an error code if the file is not created
+        }
+
+    - name: Display JSON Output
+      if: success() # Execute this step only if the previous steps succeeded
+      run: |
+        # Display the content of the JSON file
+        type ./result.json
