@@ -37,10 +37,10 @@ jobs:
     # Step 4: Connect to the SQL Server and run a query
     - name: Connect to SQL Server and run a query
       env:
-        SQL_SERVER: 'mes-arido-database.database.windows.net'  
-        SQL_USER: 'opdbmanager'   
-        SQL_PASSWORD: 'DBM4n4g3r'  
-        SQL_DATABASE: 'MESDB'  # Replace with the name of your database
+        SQL_SERVER: $ {{ secrets.SQL_SERVER }}
+        SQL_USER: $ {{ secrets.SQL_USER }}
+        SQL_PASSWORD: $ {{ secrets.SQL_PASSWORD }}
+        SQL_DATABASE: $ {{ secrets.SQL_DATABASE }}
       run: |
         # Use sqlcmd to connect to the SQL Server and execute a query
         sqlcmd -S $SQL_SERVER -U $SQL_USER -P $SQL_PASSWORD -d $SQL_DATABASE -Q "SELECT * FROM Sites FOR JSON AUTO;" -o result.json
