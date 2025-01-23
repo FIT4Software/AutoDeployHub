@@ -54,7 +54,7 @@ jobs:
         }
 
     - name: Display JSON Output
-      if: success() # Execute this step only if the previous steps succeeded
+      if: success() 
       run: |
         # Display the content of the JSON file
         type ./result.json
