@@ -14,21 +14,31 @@ jobs:
         uses: actions/checkout@v2
 
       - name: Install SQL Server tools
-        run: choco install sql-server-management-studio
+        run: choco install sqlcmd
 
-      - name: Execute SQL Scripts
+      - name: Execute SQL Scripts in Order
+        shell: pwsh
         env:
           SQL_SERVER: ${{ secrets.SQL_SERVER }}
           SQL_USER: ${{ secrets.SQL_USER }}
           SQL_PASSWORD: ${{ secrets.SQL_PASSWORD }}
           SQL_DATABASE: ${{ secrets.SQL_DATABASE }}
         run: |
-          $sqlFiles = Get-ChildItem -Path "./220 - SQL" -Filter *.sql -Recurse
-          foreach ($file in $sqlFiles) {
-            try {
-              Invoke-Sqlcmd -ServerInstance $env:SQL_SERVER -Database $env:SQL_DATABASE -Username $env:SQL_USER -Password $env:SQL_PASSWORD -InputFile $file.FullName
-              Write-Output "Successfully executed $($file.FullName)"
-            } catch {
-              Write-Error "Failed to execute $($file.FullName): $($_.Exception.Message)"
+          # Obtener las carpetas principales en orden ascendente
+          $folders = Get-ChildItem -Path "220 - SQL" -Directory | Sort-Object Name
+          
+          foreach ($folder in $folders) {
+            Write-Output "Processing folder: $($folder.Name)"
+            
+            $sqlFiles = Get-ChildItem -Path $folder.FullName -Filter *.sql | Sort-Object Name
+            
+            foreach ($file in $sqlFiles) {
+              try {
+                Write-Output "Executing $($file.FullName)..."
+                sqlcmd -S $env:SQL_SERVER -U $env:SQL_USER -P $env:SQL_PASSWORD -d $env:SQL_DATABASE -i $file.FullName
+                Write-Output "Successfully executed $($file.Name)"
+              } catch {
+                Write-Error "Failed to execute $($file.Name): $($_.Exception.Message)"
+              }
             }
           }
