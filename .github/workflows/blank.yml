@@ -23,7 +23,7 @@ jobs:
           SQL_PASSWORD: ${{ secrets.SQL_PASSWORD }}
           SQL_DATABASE: ${{ secrets.SQL_DATABASE }}
         run: |
-          $sqlFiles = Get-ChildItem -Path "./AUTODEPLYHUB/220 - SQL" -Filter *.sql -Recurse
+          $sqlFiles = Get-ChildItem -Path "./AUTODEPLOYHUB/220 - SQL" -Filter *.sql -Recurse
           foreach ($file in $sqlFiles) {
             try {
               Invoke-Sqlcmd -ServerInstance $env:SQL_SERVER -Database $env:SQL_DATABASE -Username $env:SQL_USER -Password $env:SQL_PASSWORD -InputFile $file.FullName
