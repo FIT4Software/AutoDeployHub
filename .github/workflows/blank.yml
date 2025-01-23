@@ -1,60 +1,47 @@
-# This is a basic workflow to help you get started with Actions
-
 name: CI
 
-# Controls when the workflow will run
 on:
-  # Triggers the workflow on push or pull request events but only for the "main" branch
   push:
     branches: [ "main" ]
-  # pull_request:
-  #   branches: [ "main" ]
-
-  # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
 
 jobs:
   connect-sql-server:
-    runs-on: windows-latest # Use the latest windows runner
+    runs-on: windows-latest
 
     steps:
     # Step 1: Checkout the repository code
     - name: Checkout code
       uses: actions/checkout@v3
 
-    # Step 2: Set up .NET SDK (only needed if the project involves .NET tools)
-    - name: Set up .NET Core SDK
-      uses: actions/setup-dotnet@v3
-      with:
-        dotnet-version: '6.0' # Specify the .NET version
+    # Step 2: Install SQL Server tools
+    - name: Install SQL Server tools
+      run: |
+        choco install sqlcmd -y
+        sqlcmd -?
 
-    # Step 3: Install SQL Server tools (sqlcmd)
-    - name: Set up .NET Core SDK
-      uses: actions/setup-dotnet@v3
-      with:
-        dotnet-version: '6.0'
-
-    # Step 4: Connect to the SQL Server and run a query
+    # Step 3: Connect to the SQL Server and run a query
     - name: Connect to SQL Server and run a query
       env:
-        SQL_SERVER: $ {{ secrets.SQL_SERVER }}
-        SQL_USER: $ {{ secrets.SQL_USER }}
-        SQL_PASSWORD: $ {{ secrets.SQL_PASSWORD }}
-        SQL_DATABASE: $ {{ secrets.SQL_DATABASE }}
+        SQL_SERVER: ${{ secrets.SQL_SERVER }}
+        SQL_USER: ${{ secrets.SQL_USER }}
+        SQL_PASSWORD: ${{ secrets.SQL_PASSWORD }}
+        SQL_DATABASE: ${{ secrets.SQL_DATABASE }}
       run: |
-        # Use sqlcmd to connect to the SQL Server and execute a query
-        sqlcmd -S $SQL_SERVER -U $SQL_USER -P $SQL_PASSWORD -d $SQL_DATABASE -Q "SELECT * FROM Sites FOR JSON AUTO;" -o result.json
+        # Connect to SQL Server and execute the query
+        sqlcmd -S %SQL_SERVER% -U %SQL_USER% -P %SQL_PASSWORD% -d %SQL_DATABASE% -Q "SELECT * FROM Sites FOR JSON AUTO;" -o result.json
         
-        # Check if the result.json file was created successfully
-        if (Test-Path ./result.json) {
+        # Check if the result.json file was created
+        if (Test-Path result.json) {
           Write-Host "The result.json file was created successfully."
         } else {
           Write-Host "The result.json file could not be created."
-          exit 1 # Exit the script with an error code if the file is not created
+          exit 1
         }
 
+    # Step 4: Display JSON Output
     - name: Display JSON Output
-      if: success() 
+      if: success()
       run: |
         # Display the content of the JSON file
-        type ./result.json
+        type result.json
