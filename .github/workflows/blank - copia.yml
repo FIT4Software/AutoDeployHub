@@ -1,0 +1,47 @@
+name: CI
+
+on:
+  push:
+    branches: [ "main" ]
+  workflow_dispatch:
+
+jobs:
+  connect-sql-server:
+    runs-on: windows-latest
+
+    steps:
+    # Step 1: Checkout the repository code
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    # Step 2: Install SQL Server tools
+    - name: Install SQL Server tools
+      run: |
+        choco install sqlcmd -y
+        sqlcmd -?
+
+    # Step 3: Connect to the SQL Server and run a query
+    - name: Connect to SQL Server and run a query
+      env:
+        SQL_SERVER: ${{ secrets.SQL_SERVER }}
+        SQL_USER: ${{ secrets.SQL_USER }}
+        SQL_PASSWORD: ${{ secrets.SQL_PASSWORD }}
+        SQL_DATABASE: ${{ secrets.SQL_DATABASE }}
+      run: |
+        # Connect to SQL Server and execute the query
+        sqlcmd -S %SQL_SERVER% -U %SQL_USER% -P %SQL_PASSWORD% -d %SQL_DATABASE% -Q "SELECT * FROM Sites FOR JSON AUTO;" -o result.json
+        
+        # Check if the result.json file was created
+        if (Test-Path result.json) {
+          Write-Host "The result.json file was created successfully."
+        } else {
+          Write-Host "The result.json file could not be created..."
+          exit 1
+        }
+
+    # Step 4: Display JSON Output
+    - name: Display JSON Output
+      if: success()
+      run: |
+        # Display the content of the JSON file
+        type result.json
