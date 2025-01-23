@@ -23,7 +23,7 @@ jobs:
           SQL_PASSWORD: ${{ secrets.SQL_PASSWORD }}
           SQL_DATABASE: ${{ secrets.SQL_DATABASE }}
         run: |
-          Invoke-Sqlcmd -ServerInstance $env:SQL_SERVER -Database $env:SQL_DATABASE -Username $env:SQL_USER -Password $env:SQL_PASSWORD -Query "SELECT * FROM Sites FOR JSON AUTO;" -o result.json
+          Invoke-Sqlcmd -ServerInstance $env:SQL_SERVER -Database $env:SQL_DATABASE -Username $env:SQL_USER -Password $env:SQL_PASSWORD -Query "SELECT * FROM Sites FOR JSON AUTO;" -OutputFile result.json
 
       # Step 4: Display JSON Output
       - name: Display JSON Output
@@ -31,4 +31,3 @@ jobs:
         run: |
           # Display the content of the JSON file
           type result.json
-          
