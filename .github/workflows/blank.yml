@@ -35,7 +35,7 @@ jobs:
         if (Test-Path result.json) {
           Write-Host "The result.json file was created successfully."
         } else {
-          Write-Host "The result.json file could not be created."
+          Write-Host "The result.json file could not be created..."
           exit 1
         }
 
