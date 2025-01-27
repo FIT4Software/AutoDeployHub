@@ -28,6 +28,13 @@ jobs:
           $folders = Get-ChildItem -Path "220 - SQL" -Recurse -Directory | Sort-Object FullName
       
           foreach ($folder in $folders) {
+
+             # Check if the folder name contains a number
+            if ($folder.Name -notmatch '\d') {
+              Write-Output "Skipping folder (no number in name): $($folder.FullName)"
+              continue
+            }
+
             Write-Output "Processing folder: $($folder.FullName)"
       
             # Get and sort the SQL files in each folder
