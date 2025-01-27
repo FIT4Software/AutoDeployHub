@@ -24,14 +24,15 @@ jobs:
           SQL_PASSWORD: ${{ secrets.SQL_PASSWORD }}
           SQL_DATABASE: ${{ secrets.SQL_DATABASE }}
         run: |
-          # Obtener las carpetas principales en orden ascendente
-          $folders = Get-ChildItem -Path "220 - SQL" -Directory | Sort-Object Name
-          
+          # Get all folders and subfolders sorted in ascending order
+          $folders = Get-ChildItem -Path "220 - SQL" -Recurse -Directory | Sort-Object FullName
+
           foreach ($folder in $folders) {
-            Write-Output "Processing folder: $($folder.Name)"
-            
+            Write-Output "Processing folder: $($folder.FullName)"
+
+            # Get and sort the SQL files in each folder
             $sqlFiles = Get-ChildItem -Path $folder.FullName -Filter *.sql | Sort-Object Name
-            
+
             foreach ($file in $sqlFiles) {
               try {
                 Write-Output "Executing $($file.FullName)..."
