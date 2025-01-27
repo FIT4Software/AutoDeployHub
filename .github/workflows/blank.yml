@@ -10,13 +10,13 @@ jobs:
     runs-on: windows-latest
 
     steps:
-      - name: Checkout code
+      - name: ⚙️ Checkout code
         uses: actions/checkout@v2
 
-      - name: Install SQL Server tools 🛠️
+      - name: 🛠️ Install SQL Server tools 
         run: choco install sqlcmd
 
-      - name: Execute SQL Scripts in Order 🏃‍♂️‍➡️
+      - name: 🏃‍♂️‍➡️ Execute SQL Scripts in Order 
         shell: pwsh
         env:
           SQL_SERVER: ${{ secrets.SQL_SERVER }}
@@ -47,12 +47,12 @@ jobs:
       
                 # Check for errors in the output
                 if ($LASTEXITCODE -ne 0) {
-                  Write-Error "Error executing $($file.Name): $output"
+                  Write-Error "❗Error executing $($file.Name): $output"
                 } else {
-                  Write-Output "Successfully executed $($file.Name)"
+                  Write-Output "✅ Successfully executed $($file.Name)"
                 }
               } catch {
-                Write-Error "Failed to execute $($file.Name): $($_.Exception.Message)"
+                Write-Error "❌ Failed to execute $($file.Name): $($_.Exception.Message)"
               }
               Write-Output "------------------------------------------------end---------------------------------------------------------"
             }
