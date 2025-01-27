@@ -36,8 +36,20 @@ jobs:
             foreach ($file in $sqlFiles) {
               try {
                 Write-Output "Executing $($file.FullName)..."
-                sqlcmd -S $env:SQL_SERVER -U $env:SQL_USER -P $env:SQL_PASSWORD -d $env:SQL_DATABASE -i $file.FullName
-                Write-Output "Successfully executed $($file.Name)"
+
+                # Capture the output of sqlcmd
+                $output = sqlcmd -S $env:SQL_SERVER -U $env:SQL_USER -P $env:SQL_PASSWORD -d $env:SQL_DATABASE -i $file.FullName 2>&1
+
+                # Print the output for visibility
+                Write-Output "Result of $($file.Name):"
+                Write-Output $output
+
+                # Check for errors in the output
+                if ($LASTEXITCODE -ne 0) {
+                  Write-Error "Error executing $($file.Name): $output"
+                } else {
+                  Write-Output "Successfully executed $($file.Name)"
+                }
               } catch {
                 Write-Error "Failed to execute $($file.Name): $($_.Exception.Message)"
               }
