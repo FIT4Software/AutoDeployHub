@@ -24,53 +24,34 @@ jobs:
           SQL_PASSWORD: ${{ secrets.SQL_PASSWORD }}
           SQL_DATABASE: ${{ secrets.SQL_DATABASE }}
         run: |
-          # Initialize log file
-          $logFile = "execution_log.txt"
-          if (Test-Path $logFile) { Remove-Item $logFile }  # Clear previous log if exists
-          "Execution Log - $(Get-Date)" | Out-File -FilePath $logFile -Encoding utf8 -Append
-
           # Get all folders and subfolders sorted in ascending order
           $folders = Get-ChildItem -Path "220 - SQL" -Recurse -Directory | Sort-Object FullName
 
           foreach ($folder in $folders) {
-            $folderMessage = "Processing folder: $($folder.FullName)"
-            Write-Output $folderMessage
-            $folderMessage | Out-File -FilePath $logFile -Encoding utf8 -Append
+            Write-Output "Processing folder: $($folder.FullName)"
 
             # Get and sort the SQL files in each folder
             $sqlFiles = Get-ChildItem -Path $folder.FullName -Filter *.sql | Sort-Object Name
 
             foreach ($file in $sqlFiles) {
               try {
-                $fileMessage = "Executing $($file.FullName)..."
-                Write-Output $fileMessage
-                $fileMessage | Out-File -FilePath $logFile -Encoding utf8 -Append
+                Write-Output "Executing $($file.FullName)..."
 
                 # Capture the output of sqlcmd
                 $output = sqlcmd -S $env:SQL_SERVER -U $env:SQL_USER -P $env:SQL_PASSWORD -d $env:SQL_DATABASE -i $file.FullName 2>&1
 
-                # Log the result
-                $successMessage = "Result of $($file.Name): $output"
-                Write-Output $successMessage
-                $successMessage | Out-File -FilePath $logFile -Encoding utf8 -Append
+                # Print the output for visibility
+                Write-Output "Result of $($file.Name):"
+                Write-Output $output
 
                 # Check for errors in the output
                 if ($LASTEXITCODE -ne 0) {
-                  $errorMessage = "Error executing $($file.Name): $output"
-                  Write-Error $errorMessage
-                  $errorMessage | Out-File -FilePath $logFile -Encoding utf8 -Append
+                  Write-Error "Error executing $($file.Name): $output"
                 } else {
-                  $successMessage = "Successfully executed $($file.Name)"
-                  Write-Output $successMessage
-                  $successMessage | Out-File -FilePath $logFile -Encoding utf8 -Append
+                  Write-Output "Successfully executed $($file.Name)"
                 }
               } catch {
-                $exceptionMessage = "Failed to execute $($file.Name): $($_.Exception.Message)"
-                Write-Error $exceptionMessage
-                $exceptionMessage | Out-File -FilePath $logFile -Encoding utf8 -Append
+                Write-Error "Failed to execute $($file.Name): $($_.Exception.Message)"
               }
             }
           }
-
-          # Final log message
-          "Execution completed at $(Get-Date)" | Out-File -FilePath $logFile -Encoding utf8 -Append
