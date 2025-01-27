@@ -16,7 +16,7 @@ jobs:
       - name: Install SQL Server tools
         run: choco install sqlcmd
 
-      - name: Execute SQL Scripts in Order
+      - name: Execute Specific SQL Script
         shell: pwsh
         env:
           SQL_SERVER: ${{ secrets.SQL_SERVER }}
@@ -24,34 +24,23 @@ jobs:
           SQL_PASSWORD: ${{ secrets.SQL_PASSWORD }}
           SQL_DATABASE: ${{ secrets.SQL_DATABASE }}
         run: |
-          # Get all folders and subfolders sorted in ascending order.
-          $folders = Get-ChildItem -Path "220 - SQL" -Recurse -Directory | Sort-Object FullName
-      
-          foreach ($folder in $folders) {
-            Write-Output "Processing folder: $($folder.FullName)"
-      
-            # Get and sort the SQL files in each folder
-            $sqlFiles = Get-ChildItem -Path $folder.FullName -Filter *.sql | Sort-Object Name
-      
-            foreach ($file in $sqlFiles) {
-              try {
-                Write-Output "Executing $($file.FullName)..."
-      
-                # Capture the output of sqlcmd
-                $output = sqlcmd -S $env:SQL_SERVER -U $env:SQL_USER -P $env:SQL_PASSWORD -d $env:SQL_DATABASE -i $file.FullName 2>&1
-      
-                # Print the output for visibility
-                Write-Output "Result of $($file.Name):"
-                Write-Output $output
-      
-                # Check for errors in the output
-                if ($LASTEXITCODE -ne 0) {
-                  Write-Error "Error executing $($file.Name): $output"
-                } else {
-                  Write-Output "Successfully executed $($file.Name)"
-                }
-              } catch {
-                Write-Error "Failed to execute $($file.Name): $($_.Exception.Message)"
-              }
+          $scriptPath = "220 - SQL/script.sql"
+          Write-Output "Executing script: $scriptPath"
+          
+          try {
+            # Execute the specific SQL script
+            $output = sqlcmd -S $env:SQL_SERVER -U $env:SQL_USER -P $env:SQL_PASSWORD -d $env:SQL_DATABASE -i $scriptPath 2>&1
+
+            # Print the output for visibility
+            Write-Output "Result of $scriptPath:"
+            Write-Output $output
+
+            # Check for errors in the output
+            if ($LASTEXITCODE -ne 0) {
+              Write-Error "Error executing script: $output"
+            } else {
+              Write-Output "Successfully executed the script."
             }
+          } catch {
+            Write-Error "Failed to execute the script: $($_.Exception.Message)"
           }
