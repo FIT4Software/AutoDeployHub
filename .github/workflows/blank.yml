@@ -33,9 +33,9 @@ jobs:
             # Get and sort the SQL files in each folder
             $sqlFiles = Get-ChildItem -Path $folder.FullName -Filter *.sql | Sort-Object Name
       
-            foreach ($file in $sqlFiles) {
-              Write-Output "------------------------------------------------start-------------------------------------------------------"
+            foreach ($file in $sqlFiles) {            
               try {
+                Write-Output "------------------------------------------------start-------------------------------------------------------"
                 Write-Output "Executing $($file.FullName)..."
       
                 # Capture the output of sqlcmd
