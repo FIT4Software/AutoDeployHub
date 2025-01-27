@@ -29,7 +29,7 @@ jobs:
           SQL_PASSWORD: ${{ secrets.SQL_PASSWORD }}
           SQL_DATABASE: ${{ secrets.SQL_DATABASE }}
         run: |
-          $scriptPath = "220 - SQL\00 - Create Database\03 - AppVersions.sql"
+          $scriptPath = ".github\220 - SQL\00 - Create Database\03 - AppVersions.sql"
           Write-Output "Executing script: ${scriptPath}"
 
           # Check if the file exists
