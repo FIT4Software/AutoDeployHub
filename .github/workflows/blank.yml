@@ -34,6 +34,7 @@ jobs:
             $sqlFiles = Get-ChildItem -Path $folder.FullName -Filter *.sql | Sort-Object Name
       
             foreach ($file in $sqlFiles) {
+              Write-Output "------------------------------------------------start-------------------------------------------------------"
               try {
                 Write-Output "Executing $($file.FullName)..."
       
@@ -53,5 +54,6 @@ jobs:
               } catch {
                 Write-Error "Failed to execute $($file.Name): $($_.Exception.Message)"
               }
+              Write-Output "------------------------------------------------end---------------------------------------------------------"
             }
           }
