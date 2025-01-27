@@ -16,6 +16,11 @@ jobs:
       - name: Install SQL Server tools
         run: choco install sqlcmd
 
+      - name: List directory contents
+        run: |
+          # List the files in the working directory to check if the script exists
+          Get-ChildItem -Recurse
+
       - name: Execute Specific SQL Script
         shell: pwsh
         env:
@@ -24,9 +29,15 @@ jobs:
           SQL_PASSWORD: ${{ secrets.SQL_PASSWORD }}
           SQL_DATABASE: ${{ secrets.SQL_DATABASE }}
         run: |
-          $scriptPath = "220 - SQL/script.sql"
+          $scriptPath = "220 - SQL/03 - AppVersion.sql"
           Write-Output "Executing script: ${scriptPath}"
-          
+
+          # Check if the file exists
+          if (-Not (Test-Path $scriptPath)) {
+            Write-Error "Script not found: $scriptPath"
+            exit 1
+          }
+
           try {
             # Execute the specific SQL script
             $output = sqlcmd -S $env:SQL_SERVER -U $env:SQL_USER -P $env:SQL_PASSWORD -d $env:SQL_DATABASE -i $scriptPath 2>&1
