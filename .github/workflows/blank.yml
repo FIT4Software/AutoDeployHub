@@ -16,12 +16,7 @@ jobs:
       - name: Install SQL Server tools
         run: choco install sqlcmd
 
-      - name: List directory contents
-        run: |
-          # List the files in the working directory to check if the script exists
-          Get-ChildItem -Recurse
-
-      - name: Execute Specific SQL Script
+      - name: Execute SQL Scripts in Order
         shell: pwsh
         env:
           SQL_SERVER: ${{ secrets.SQL_SERVER }}
@@ -29,29 +24,34 @@ jobs:
           SQL_PASSWORD: ${{ secrets.SQL_PASSWORD }}
           SQL_DATABASE: ${{ secrets.SQL_DATABASE }}
         run: |
-          $scriptPath = ".github\220 - SQL\00 - Create Database\03 - AppVersions.sql"
-          Write-Output "Executing script: ${scriptPath}"
-
-          # Check if the file exists
-          if (-Not (Test-Path $scriptPath)) {
-            Write-Error "Script not found: $scriptPath"
-            exit 1
-          }
-
-          try {
-            # Execute the specific SQL script
-            $output = sqlcmd -S $env:SQL_SERVER -U $env:SQL_USER -P $env:SQL_PASSWORD -d $env:SQL_DATABASE -i $scriptPath 2>&1
-
-            # Print the output for visibility
-            Write-Output "Result of ${scriptPath}:"
-            Write-Output $output
-
-            # Check for errors in the output
-            if ($LASTEXITCODE -ne 0) {
-              Write-Error "Error executing script: $output"
-            } else {
-              Write-Output "Successfully executed the script."
+          # Get all folders and subfolders sorted in ascending order.
+          $folders = Get-ChildItem -Path ".github" -Recurse -Directory | Sort-Object FullName
+      
+          foreach ($folder in $folders) {
+            Write-Output "Processing folder: $($folder.FullName)"
+      
+            # Get and sort the SQL files in each folder
+            $sqlFiles = Get-ChildItem -Path $folder.FullName -Filter *.sql | Sort-Object Name
+      
+            foreach ($file in $sqlFiles) {
+              try {
+                Write-Output "Executing $($file.FullName)..."
+      
+                # Capture the output of sqlcmd
+                $output = sqlcmd -S $env:SQL_SERVER -U $env:SQL_USER -P $env:SQL_PASSWORD -d $env:SQL_DATABASE -i $file.FullName 2>&1
+      
+                # Print the output for visibility
+                Write-Output "Result of $($file.Name):"
+                Write-Output $output
+      
+                # Check for errors in the output
+                if ($LASTEXITCODE -ne 0) {
+                  Write-Error "Error executing $($file.Name): $output"
+                } else {
+                  Write-Output "Successfully executed $($file.Name)"
+                }
+              } catch {
+                Write-Error "Failed to execute $($file.Name): $($_.Exception.Message)"
+              }
             }
-          } catch {
-            Write-Error "Failed to execute the script: $($_.Exception.Message)"
           }
