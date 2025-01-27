@@ -1,9 +1,9 @@
-USE [OpsDataTest]
+USE [AutoDeployHubDB]
 GO
 
 -------------------------------------------------------------------------------------------------------------
 -- 										OPS Database Script														--	
---						This Script will create the KPI_DIMENSION table in OpsDataTest							--
+--						This Script will create the KPI_DIMENSION table in AutoDeployHubDB							--
 -------------------------------------------------------------------------------------------------------------
 -- 										SET TAB SPACING TO 4													--	
 -------------------------------------------------------------------------------------------------------------

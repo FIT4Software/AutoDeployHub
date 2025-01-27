@@ -1,9 +1,9 @@
-USE [OpsDataTest]
+USE [AutoDeployHubDB]
 GO
 
 -------------------------------------------------------------------------------------------------------------
 -- 										OPS Database Script														--	
---						This Script will create the LastShift_Dimension table in OpsDataTest					--
+--						This Script will create the LastShift_Dimension table in AutoDeployHubDB					--
 -------------------------------------------------------------------------------------------------------------
 -- 										SET TAB SPACING TO 4													--	
 -------------------------------------------------------------------------------------------------------------
