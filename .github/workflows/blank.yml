@@ -25,7 +25,7 @@ jobs:
           SQL_DATABASE: ${{ secrets.SQL_DATABASE }}
         run: |
           # Get all folders and subfolders sorted in ascending order.
-          $folders = Get-ChildItem -Path ".github" -Recurse -Directory | Sort-Object FullName
+          $folders = Get-ChildItem -Path "220 - SQL" -Recurse -Directory | Sort-Object FullName
       
           foreach ($folder in $folders) {
             Write-Output "Processing folder: $($folder.FullName)"
