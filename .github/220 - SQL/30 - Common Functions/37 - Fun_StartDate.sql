@@ -1,6 +1,3 @@
-USE [AutoDeployHubDB]
-GO
-
 -------------------------------------------------------------------------------------------------------------
 -- 										OPS Database Script													--	
 --						This Script will create the FUN_StartDate function in AutoDeployHubDB					--

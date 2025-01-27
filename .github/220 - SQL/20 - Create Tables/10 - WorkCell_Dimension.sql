@@ -1,6 +1,3 @@
-USE [AutoDeployHubDB]
-GO
-
 -------------------------------------------------------------------------------------------------------------
 -- 										OPS Database Script														--	
 --						This Script will create the WorkCell_Dimension table in AutoDeployHubDB					--

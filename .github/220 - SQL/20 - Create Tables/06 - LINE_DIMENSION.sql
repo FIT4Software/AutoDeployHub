@@ -1,6 +1,3 @@
-USE [AutoDeployHubDB]
-GO
-
 -------------------------------------------------------------------------------------------------------------
 -- 										OPS Database Script														--	
 --						This Script will create the LINE_DIMENSION table in AutoDeployHubDB						--
