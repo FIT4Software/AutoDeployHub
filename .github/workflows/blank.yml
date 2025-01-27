@@ -13,10 +13,10 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v2
 
-      - name: Install SQL Server tools
+      - name: Install SQL Server tools 🛠️
         run: choco install sqlcmd
 
-      - name: Execute SQL Scripts in Order
+      - name: Execute SQL Scripts in Order 🏃‍♂️‍➡️
         shell: pwsh
         env:
           SQL_SERVER: ${{ secrets.SQL_SERVER }}
