@@ -28,6 +28,11 @@ jobs:
           $env:SQL_PASSWORD = $config.SQL_PASSWORD
           $env:SQL_DATABASE = $config.SQL_DATABASE
 
+          Write-Output "SQL_SERVER_DATA: $env:SQL_SERVER_DATA"
+          Write-Output "SQL_USER: $env:SQL_USER"
+          Write-Output "SQL_PASSWORD: $env:SQL_PASSWORD"
+          Write-Output "SQL_DATABASE: $env:SQL_DATABASE"
+
       - name: 🏃‍♂️‍➡️ Execute SQL Scripts in Order 
         shell: pwsh
         run: |
