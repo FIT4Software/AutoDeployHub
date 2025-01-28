@@ -13,7 +13,7 @@ jobs:
       - name: ⚙️ Checkout code
         uses: actions/checkout@v2
 
-      - name: 🛠️ Install SQL Server tools 
+      - name: 🛠️ Install SQL Server tools
         run: choco install sqlcmd
       
       - name: 📄 Load configuration from JSON
@@ -22,15 +22,14 @@ jobs:
         run: |
           # Leer archivo JSON
           $config = Get-Content -Raw -Path "Config.json" | ConvertFrom-Json
-          $config | ConvertTo-Json | Out-File -FilePath config.json
+          # Setear las variables de entorno como outputs
+          echo "SQL_SERVER_DATA=$($config.SQL_SERVER_DATA)" >> $GITHUB_ENV
+          echo "SQL_USER=$($config.SQL_USER)" >> $GITHUB_ENV
+          echo "SQL_PASSWORD=$($config.SQL_PASSWORD)" >> $GITHUB_ENV
+          echo "SQL_DATABASE=$($config.SQL_DATABASE)" >> $GITHUB_ENV
 
-      - name: 🏃‍♂️‍➡️ Execute SQL Scripts in Order 
+      - name: 🏃‍♂️‍➡️ Execute SQL Scripts in Order
         shell: pwsh
-        env:
-          SQL_SERVER_DATA: ${{ steps.load_config.outputs.SQL_SERVER_DATA }}
-          SQL_USER: ${{ steps.load_config.outputs.SQL_USER }}
-          SQL_PASSWORD: ${{ steps.load_config.outputs.SQL_PASSWORD }}
-          SQL_DATABASE: ${{ steps.load_config.outputs.SQL_DATABASE }}
         run: |
           # Verificar si las variables de entorno están correctamente cargadas
           Write-Output "SQL_SERVER_DATA: $env:SQL_SERVER_DATA"
@@ -38,7 +37,7 @@ jobs:
           Write-Output "SQL_PASSWORD: $env:SQL_PASSWORD"
           Write-Output "SQL_DATABASE: $env:SQL_DATABASE"
       
-          # Continuar con la ejecución de los scripts
+          # Continuar con la ejecución de los scripts SQL
           $folders = Get-ChildItem -Path "220 - SQL" -Recurse -Directory | Sort-Object FullName
       
           foreach ($folder in $folders) {
