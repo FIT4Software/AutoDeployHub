@@ -58,7 +58,7 @@ jobs:
         shell: pwsh
         run: |
           # Ensure the .zip file exists and then unzip it
-          $zipFile = "$env:PATH_RELEASE_APP\release.zip"
+          $zipFile = "$env:PATH_RELEASE_APP"
           $unzipFolder = "$env:PATH_RELEASE_APP\extracted"
       
           # Check if the zip file exists
