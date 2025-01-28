@@ -20,7 +20,7 @@ jobs:
         shell: pwsh
         run: |
           # Leer archivo JSON
-          $config = Get-Content -Raw -Path "config.json" | ConvertFrom-Json
+          $config = Get-Content -Raw -Path "Config.json" | ConvertFrom-Json
 
           # Exportar valores como variables de entorno
           $env:SQL_SERVER_DATA = $config.SQL_SERVER_DATA
