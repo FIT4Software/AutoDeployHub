@@ -8,11 +8,11 @@ on:
 jobs:
   connect-sql-server:
     runs-on: windows-latest
-    # env:
-    #   SQL_SERVER_DATA: ""
-    #   SQL_USER: ""
-    #   SQL_PASSWORD: ""
-    #   SQL_DATABASE: ""
+    env:
+      SQL_SERVER_DATA: ""
+      SQL_USER: ""
+      SQL_PASSWORD: ""
+      SQL_DATABASE: ""
 
     steps:
       - name: ⚙️ Checkout code
@@ -28,10 +28,15 @@ jobs:
           # Verificar el contenido del archivo JSON
           Write-Output "Config Loaded: $($config | ConvertTo-Json -Depth 3)"
 
-          echo "SQL_SERVER_DATA=$($config.SQL_SERVER_DATA)" >> $GITHUB_ENV
-          echo "SQL_USER=$($config.SQL_USER)" >> $GITHUB_ENV
-          echo "SQL_PASSWORD=$($config.SQL_PASSWORD)" >> $GITHUB_ENV
-          echo "SQL_DATABASE=$($config.SQL_DATABASE)" >> $GITHUB_ENV
+          config=$(jq -r '.SQL_SERVER_DATA, .SQL_USER, .SQL_PASSWORD, .SQL_DATABASE' config.json)
+          read -r SQL_SERVER_DATA SQL_USER SQL_PASSWORD SQL_DATABASE <<< "$config"
+
+          echo "SQL_SERVER_DATA=$SQL_SERVER_DATA" >> $GITHUB_ENV
+          echo "SQL_USER=$SQL_USER" >> $GITHUB_ENV
+          echo "SQL_PASSWORD=$SQL_PASSWORD" >> $GITHUB_ENV
+          echo "SQL_DATABASE=$SQL_DATABASE" >> $GITHUB_ENV
+
+
 
       - name: 🏃‍♂️‍➡️ Verify environment variables
         shell: pwsh
