@@ -18,7 +18,7 @@ jobs:
       - name: ⚙️ Checkout code
         uses: actions/checkout@v2
 
-      - name: 📄 Load configuration from JSON
+      - name: 📄 Load configuration from JSON...
         shell: pwsh
         id: load_config
         run: |
