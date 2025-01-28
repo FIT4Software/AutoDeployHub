@@ -56,9 +56,9 @@ jobs:
                 if ($output -match 'Msg \d+, Level \d+, State \d+, Server .+, Line \d+') {
                   Write-Output "❗Error executing $($file.Name): $output"
                 } 
-                # else {
-                #   Write-Output "✅ Successfully executed $($file.Name)"
-                # }
+                else {
+                  Write-Output "✅ Successfully executed $($file.Name)"
+                }
               } catch {
                 Write-Error "❌ Failed to execute $($file.Name): $($_.Exception.Message)"
               }
