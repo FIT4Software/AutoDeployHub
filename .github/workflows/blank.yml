@@ -50,10 +50,10 @@ jobs:
       
                 # Print the output for visibility
                 Write-Output "Result of $($file.Name):"
-                Write-Output $output
+                # Write-Output $output
       
                 # Check for errors in the output
-                if ($LASTEXITCODE -ne 0) {
+                if ($output -match 'Msg \d+, Level \d+, State \d+, Server .+, Line \d+') {
                   Write-Error "❗Error executing $($file.Name): $output"
                 } else {
                   Write-Output "✅ Successfully executed $($file.Name)"
