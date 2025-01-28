@@ -30,7 +30,7 @@ jobs:
           foreach ($folder in $folders) {
 
              # Check if the folder name contains a number
-            if ($folder.Name -notmatch '\d') {
+            if ($folder.Name -notmatch '^\d') {
               Write-Output "Skipping folder (no number in name): $($folder.FullName)"
               continue
             }
