@@ -38,23 +38,13 @@ jobs:
           Add-Content -Path $env:GITHUB_ENV -Value "SQL_PASSWORD=$SQL_PASSWORD"
           Add-Content -Path $env:GITHUB_ENV -Value "SQL_DATABASE=$SQL_DATABASE"
 
-      - name: 🏃‍♂️‍➡️ Verify environment variables
+      - name: 📝 Verify environment variables
         shell: pwsh
         run: |
           Write-Output "SQL_SERVER_DATA: $env:SQL_SERVER_DATA"
           Write-Output "SQL_USER: $env:SQL_USER"
           Write-Output "SQL_PASSWORD: $env:SQL_PASSWORD"
           Write-Output "SQL_DATABASE: $env:SQL_DATABASE"
-
-      - name: ✔️ Check GITHUB_ENV content
-        shell: pwsh
-        run: |
-          if (Test-Path $env:GITHUB_ENV) {
-              Write-Output "GITHUB_ENV content:"
-              Get-Content $env:GITHUB_ENV
-          } else {
-              Write-Output "GITHUB_ENV file not found."
-          }
         
       - name: 🛠️ Install SQL Server tools
         run: choco install sqlcmd
