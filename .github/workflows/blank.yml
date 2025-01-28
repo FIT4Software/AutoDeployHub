@@ -22,14 +22,14 @@ jobs:
           # Leer archivo JSON
           $config = Get-Content -Raw -Path "Config.json" | ConvertFrom-Json
 
+          [System.Environment]::SetEnvironmentVariable('SQL_SERVER_DATA', $config.SQL_SERVER_DATA, 'Process')
+          [System.Environment]::SetEnvironmentVariable('SQL_USER', $config.SQL_USER, 'Process')
+          [System.Environment]::SetEnvironmentVariable('SQL_PASSWORD', $config.SQL_PASSWORD, 'Process')
+          [System.Environment]::SetEnvironmentVariable('SQL_DATABASE', $config.SQL_DATABASE, 'Process')
+
       - name: 🏃‍♂️‍➡️ Execute SQL Scripts in Order 
         shell: pwsh
         run: |
-
-          $env:SQL_SERVER_DATA = $config.SQL_SERVER_DATA
-          $env:SQL_USER = $config.SQL_USER
-          $env:SQL_PASSWORD = $config.SQL_PASSWORD
-          $env:SQL_DATABASE = $config.SQL_DATABASE
 
           # Get all folders and subfolders sorted in ascending order.
           $folders = Get-ChildItem -Path "220 - SQL" -Recurse -Directory | Sort-Object FullName
