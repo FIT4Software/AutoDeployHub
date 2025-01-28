@@ -47,30 +47,35 @@ jobs:
       - name: 🏃‍♂️‍➡️ Execute SQL Scripts in Order
         shell: pwsh
         run: |     
-          # Continuar con la ejecución de los scripts SQL
-          $folders = Get-ChildItem -Path "220 - SQL" -Recurse -Directory | Sort-Object FullName
-          
-          foreach ($folder in $folders) {
-            if ($folder.Name -notmatch '^\d') {
-              Write-Output "Skipping folder (no number in name): $($folder.FullName)"
-              continue
-            }
-            Write-Output "Processing folder: $($folder.FullName)"
-            $sqlFiles = Get-ChildItem -Path $folder.FullName -Filter *.sql | Sort-Object Name
-          
-            foreach ($file in $sqlFiles) {            
-              try {
-                Write-Output "Executing $($file.FullName)..."
-                $output = sqlcmd -S $env:SQL_SERVER_DATA -U $env:SQL_USER -P $env:SQL_PASSWORD -d $env:SQL_DATABASE -i $file.FullName 2>&1
-                Write-Output "Result of $($file.Name):"
-                if ($output -match 'Msg \d+, Level \d+, State \d+, Server .+, Line \d+') {
-                  Write-Output "❗Error executing $($file.Name): $output"
-                } 
-                else {
-                  Write-Output "✅ Successfully executed $($file.Name)"
+           # Imprimir las variables de entorno para verificar si están cargadas correctamente
+            Write-Output "SQL_SERVER_DATA: $env:SQL_SERVER_DATA"
+            Write-Output "SQL_USER: $env:SQL_USER"
+            Write-Output "SQL_PASSWORD: $env:SQL_PASSWORD"
+            Write-Output "SQL_DATABASE: $env:SQL_DATABASE"
+
+            $folders = Get-ChildItem -Path "220 - SQL" -Recurse -Directory | Sort-Object FullName
+            
+            foreach ($folder in $folders) {
+              if ($folder.Name -notmatch '^\d') {
+                Write-Output "Skipping folder (no number in name): $($folder.FullName)"
+                continue
+              }
+              Write-Output "Processing folder: $($folder.FullName)"
+              $sqlFiles = Get-ChildItem -Path $folder.FullName -Filter *.sql | Sort-Object Name
+            
+              foreach ($file in $sqlFiles) {            
+                try {
+                  Write-Output "Executing $($file.FullName)..."
+                  $output = sqlcmd -S $env:SQL_SERVER_DATA -U $env:SQL_USER -P $env:SQL_PASSWORD -d $env:SQL_DATABASE -i $file.FullName 2>&1
+                  Write-Output "Result of $($file.Name):"
+                  if ($output -match 'Msg \d+, Level \d+, State \d+, Server .+, Line \d+') {
+                    Write-Output "❗Error executing $($file.Name): $output"
+                  } 
+                  else {
+                    Write-Output "✅ Successfully executed $($file.Name)"
+                  }
+                } catch {
+                  Write-Error "❌ Failed to execute $($file.Name): $($_.Exception.Message)"
                 }
-              } catch {
-                Write-Error "❌ Failed to execute $($file.Name): $($_.Exception.Message)"
               }
             }
-          }
