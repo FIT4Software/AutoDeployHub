@@ -13,6 +13,9 @@ jobs:
       - name: ⚙️ Checkout code
         uses: actions/checkout@v2
 
+      - name: 🛠️ Install SQL Server tools
+        run: choco install sqlcmd
+      
       - name: 📄 Load configuration from JSON
         shell: pwsh
         id: load_config
@@ -29,9 +32,6 @@ jobs:
           echo "SQL_PASSWORD=$($config.SQL_PASSWORD)" >> $GITHUB_ENV
           echo "SQL_DATABASE=$($config.SQL_DATABASE)" >> $GITHUB_ENV
 
-      - name: 🛠️ Install SQL Server tools
-        run: choco install sqlcmd
-      
       - name: 🏃‍♂️‍➡️ Execute SQL Scripts in Order
         shell: pwsh
         run: |
