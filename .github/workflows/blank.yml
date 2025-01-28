@@ -58,8 +58,11 @@ jobs:
         shell: pwsh
         run: |
           # Ensure the .zip file exists and then unzip it
-          $zipFile = "$env:release.zip"
-          $unzipFolder = "$env:extracted"
+          $zipFile = "$env:PATH_RELEASE_APP\release.zip"
+          $unzipFolder = "$env:PATH_RELEASE_APP\extracted"
+      
+          # Debugging: Output the final zip file path
+          Write-Output "Checking for ZIP file at: $zipFile"
       
           # Check if the zip file exists
           if (Test-Path -Path $zipFile) {
@@ -67,6 +70,7 @@ jobs:
               
               # Create a temporary folder to unzip to
               if (-Not (Test-Path -Path $unzipFolder)) {
+                  Write-Output "Creating extraction folder at: $unzipFolder"
                   New-Item -ItemType Directory -Path $unzipFolder
               }
       
@@ -94,6 +98,7 @@ jobs:
               Write-Error "Zip file not found at $zipFile"
               exit 1
           }
+      
       
 
       - name: 🏃‍♂️‍➡️ Execute SQL Scripts in Order
