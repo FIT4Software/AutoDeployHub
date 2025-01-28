@@ -23,10 +23,10 @@ jobs:
         shell: pwsh
         id: load_config
         run: |
-          # Leer archivo JSON
+          # read JSON file
           $config = Get-Content -Raw -Path "config.json" | ConvertFrom-Json
           
-          # Verificar el contenido del archivo JSON
+          # Check JSON file
           Write-Output "Config Loaded: $($config | ConvertTo-Json -Depth 3)"
 
           $SQL_SERVER_DATA = $config.SQL_SERVER_DATA
@@ -35,6 +35,7 @@ jobs:
           $SQL_DATABASE = $config.SQL_DATABASE
           $PATH_RELEASE_APP = $config.PATH_RELEASE_APP
 
+          # Assign JSON values to environment variables
           Add-Content -Path $env:GITHUB_ENV -Value "SQL_SERVER_DATA=$SQL_SERVER_DATA"
           Add-Content -Path $env:GITHUB_ENV -Value "SQL_USER=$SQL_USER"
           Add-Content -Path $env:GITHUB_ENV -Value "SQL_PASSWORD=$SQL_PASSWORD"
@@ -48,6 +49,7 @@ jobs:
           Write-Output "SQL_USER: $env:SQL_USER"
           Write-Output "SQL_PASSWORD: $env:SQL_PASSWORD"
           Write-Output "SQL_DATABASE: $env:SQL_DATABASE"
+          Write-Output "PATH_RELEASE_APP: $env:PATH_RELEASE_APP"
         
       - name: 🛠️ Install SQL Server tools
         run: choco install sqlcmd
