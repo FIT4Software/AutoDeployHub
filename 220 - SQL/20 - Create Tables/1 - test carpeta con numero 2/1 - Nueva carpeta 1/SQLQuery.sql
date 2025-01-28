@@ -4,8 +4,8 @@ INSERT INTO [dbo].[AppVersions]
            ,[App_Version]
            ,[Modified_On])
      VALUES
-           ('test app no va'
-           ,'1.1'
+           ('test app ahora si'
+           ,'1.2.1'
            ,GETDATE())
 GO
 
