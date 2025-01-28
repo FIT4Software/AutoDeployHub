@@ -36,7 +36,7 @@ jobs:
           Add-Content -Path $env:GITHUB_ENV -Value "SQL_SERVER_DATA=$SQL_SERVER_DATA"
           Add-Content -Path $env:GITHUB_ENV -Value "SQL_USER=$SQL_USER"
           Add-Content -Path $env:GITHUB_ENV -Value "SQL_PASSWORD=$SQL_PASSWORD"
-          Add-Content -Path $env:GITHUB_ENV -Value 
+          Add-Content -Path $env:GITHUB_ENV -Value "SQL_DATABASE=$SQL_DATABASE"
 
       - name: 🏃‍♂️‍➡️ Verify environment variables
         shell: pwsh
