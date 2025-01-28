@@ -18,7 +18,7 @@ jobs:
       - name: ⚙️ Checkout code
         uses: actions/checkout@v2
 
-      - name: 📄 Load configuration from JSON...
+      - name: 📄 Load configuration from JSON
         shell: pwsh
         id: load_config
         run: |
@@ -32,14 +32,14 @@ jobs:
           echo "SQL_USER=$($config.SQL_USER)" >> $GITHUB_ENV
           echo "SQL_PASSWORD=$($config.SQL_PASSWORD)" >> $GITHUB_ENV
           echo "SQL_DATABASE=$($config.SQL_DATABASE)" >> $GITHUB_ENV
-      
+
       - name: 🏃‍♂️‍➡️ Verify environment variables
         shell: pwsh
         run: |
-          Write-Output "SQL_SERVER_DATA: $env.SQL_SERVER_DATA"
-          Write-Output "SQL_USER: $env.SQL_USER"
-          Write-Output "SQL_PASSWORD: $env.SQL_PASSWORD"
-          Write-Output "SQL_DATABASE: $env.SQL_DATABASE"
+          Write-Output "SQL_SERVER_DATA: $env:SQL_SERVER_DATA"
+          Write-Output "SQL_USER: $env:SQL_USER"
+          Write-Output "SQL_PASSWORD: $env:SQL_PASSWORD"
+          Write-Output "SQL_DATABASE: $env:SQL_DATABASE"
 
       - name: 🛠️ Install SQL Server tools
         run: choco install sqlcmd
