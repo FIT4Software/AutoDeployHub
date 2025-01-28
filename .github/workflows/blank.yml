@@ -20,10 +20,10 @@ jobs:
         shell: pwsh
         run: |
           # Read JSON file
-          $config = Get-Content -Raw -Path "config.json" | ConvertFrom-Json
+          $config = Get-Content -Raw -Path "Config.json" | ConvertFrom-Json
 
           # Export values as environment variables
-          $env:SQL_SERVER_DATA = $config.SQL_SERVER
+          $env:SQL_SERVER_DATA = $config.SQL_SERVER_DATA
           $env:SQL_USER = $config.SQL_USER
           $env:SQL_PASSWORD = $config.SQL_PASSWORD
           $env:SQL_DATABASE = $config.SQL_DATABASE
