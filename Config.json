@@ -3,6 +3,6 @@
     "SQL_USER": "opdbmanager",
     "SQL_PASSWORD": "DBM4n4g3r",
     "SQL_DATABASE": "AutoDeployHubDB",
-    "PATH_RELEASE_APP": "220 - SQL.zip"
+    "PATH_RELEASE_APP": "220 - SQL"
   }
   
