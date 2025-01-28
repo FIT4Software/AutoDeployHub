@@ -13,6 +13,7 @@ jobs:
       SQL_USER: ""
       SQL_PASSWORD: ""
       SQL_DATABASE: ""
+      PATH_RELEASE_APP: ""
 
     steps:
       - name: ⚙️ Checkout code
@@ -23,7 +24,7 @@ jobs:
         id: load_config
         run: |
           # Leer archivo JSON
-          $config = Get-Content -Raw -Path "Config.json" | ConvertFrom-Json
+          $config = Get-Content -Raw -Path "config.json" | ConvertFrom-Json
           
           # Verificar el contenido del archivo JSON
           Write-Output "Config Loaded: $($config | ConvertTo-Json -Depth 3)"
@@ -32,11 +33,13 @@ jobs:
           $SQL_USER = $config.SQL_USER
           $SQL_PASSWORD = $config.SQL_PASSWORD
           $SQL_DATABASE = $config.SQL_DATABASE
+          $PATH_RELEASE_APP = $config.PATH_RELEASE_APP
 
           Add-Content -Path $env:GITHUB_ENV -Value "SQL_SERVER_DATA=$SQL_SERVER_DATA"
           Add-Content -Path $env:GITHUB_ENV -Value "SQL_USER=$SQL_USER"
           Add-Content -Path $env:GITHUB_ENV -Value "SQL_PASSWORD=$SQL_PASSWORD"
           Add-Content -Path $env:GITHUB_ENV -Value "SQL_DATABASE=$SQL_DATABASE"
+          Add-Content -Path $env:GITHUB_ENV -Value "PATH_RELEASE_APP=$PATH_RELEASE_APP"
 
       - name: 📝 Verify environment variables
         shell: pwsh
@@ -52,13 +55,7 @@ jobs:
       - name: 🏃‍♂️‍➡️ Execute SQL Scripts in Order
         shell: pwsh
         run: |     
-           # Imprimir las variables de entorno para verificar si están cargadas correctamente
-            Write-Output "SQL_SERVER_DATA: $env:SQL_SERVER_DATA"
-            Write-Output "SQL_USER: $env:SQL_USER"
-            Write-Output "SQL_PASSWORD: $env:SQL_PASSWORD"
-            Write-Output "SQL_DATABASE: $env:SQL_DATABASE"
-
-            $folders = Get-ChildItem -Path "220 - SQL" -Recurse -Directory | Sort-Object FullName
+            $folders = Get-ChildItem -Path $env:PATH_RELEASE_APP -Recurse -Directory | Sort-Object FullName
             
             foreach ($folder in $folders) {
               if ($folder.Name -notmatch '^\d') {
