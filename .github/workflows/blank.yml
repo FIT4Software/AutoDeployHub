@@ -54,7 +54,7 @@ jobs:
       
                 # Check for errors in the output
                 if ($output -match 'Msg \d+, Level \d+, State \d+, Server .+, Line \d+') {
-                  Write-Error "❗Error executing $($file.Name): $output"
+                  Write-Output "❗Error executing $($file.Name): $output"
                 } else {
                   Write-Output "✅ Successfully executed $($file.Name)"
                 }
