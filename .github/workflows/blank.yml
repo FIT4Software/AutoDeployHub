@@ -10,10 +10,10 @@ jobs:
     runs-on: windows-latest
 
     env:
-      SQL_SERVER_DATA: ${{ secrets.SQL_SERVER_DATA }}
-      SQL_USER: ${{ secrets.SQL_USER }}
-      SQL_PASSWORD: ${{ secrets.SQL_PASSWORD }}
-      SQL_DATABASE: ${{ secrets.SQL_DATABASE }}
+      SQL_SERVER_DATA: ""
+      SQL_USER: ""
+      SQL_PASSWORD: ""
+      SQL_DATABASE: ""
 
     steps:
       - name: ⚙️ Checkout code
