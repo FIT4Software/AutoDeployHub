@@ -8,11 +8,11 @@ on:
 jobs:
   connect-sql-server:
     runs-on: windows-latest
-    env:
-      SQL_SERVER_DATA: "mes-arido-database.database.windows.net"
-      SQL_USER: "opdbmanager"
-      SQL_PASSWORD: "DBM4n4g3r"
-      SQL_DATABASE: "AutoDeployHubDB"
+    # env:
+    #   SQL_SERVER_DATA: ""
+    #   SQL_USER: ""
+    #   SQL_PASSWORD: ""
+    #   SQL_DATABASE: ""
 
     steps:
       - name: ⚙️ Checkout code
