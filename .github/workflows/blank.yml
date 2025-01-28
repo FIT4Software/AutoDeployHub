@@ -41,6 +41,17 @@ jobs:
           Write-Output "SQL_PASSWORD: $env:SQL_PASSWORD"
           Write-Output "SQL_DATABASE: $env:SQL_DATABASE"
 
+      - name: ✔️ Check GITHUB_ENV content
+        shell: pwsh
+        run: |
+          if (Test-Path $env:GITHUB_ENV) {
+              Write-Output "GITHUB_ENV content:"
+              Get-Content $env:GITHUB_ENV
+          } else {
+              Write-Output "GITHUB_ENV file not found."
+          }
+        
+
       - name: 🛠️ Install SQL Server tools
         run: choco install sqlcmd
 
