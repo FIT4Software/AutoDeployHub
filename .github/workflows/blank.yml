@@ -56,7 +56,6 @@ jobs:
               Write-Output "GITHUB_ENV file not found."
           }
         
-
       - name: 🛠️ Install SQL Server tools
         run: choco install sqlcmd
 
