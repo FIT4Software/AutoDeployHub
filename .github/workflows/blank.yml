@@ -28,15 +28,15 @@ jobs:
           # Verificar el contenido del archivo JSON
           Write-Output "Config Loaded: $($config | ConvertTo-Json -Depth 3)"
 
-          config=$(jq -r '.SQL_SERVER_DATA, .SQL_USER, .SQL_PASSWORD, .SQL_DATABASE' config.json)
-          read -r SQL_SERVER_DATA SQL_USER SQL_PASSWORD SQL_DATABASE <<< "$config"
+          $SQL_SERVER_DATA = $config.SQL_SERVER_DATA
+          $SQL_USER = $config.SQL_USER
+          $SQL_PASSWORD = $config.SQL_PASSWORD
+          $SQL_DATABASE = $config.SQL_DATABASE
 
-          echo "SQL_SERVER_DATA=$SQL_SERVER_DATA" >> $GITHUB_ENV
-          echo "SQL_USER=$SQL_USER" >> $GITHUB_ENV
-          echo "SQL_PASSWORD=$SQL_PASSWORD" >> $GITHUB_ENV
-          echo "SQL_DATABASE=$SQL_DATABASE" >> $GITHUB_ENV
-
-
+          Add-Content -Path $env:GITHUB_ENV -Value "SQL_SERVER_DATA=$SQL_SERVER_DATA"
+          Add-Content -Path $env:GITHUB_ENV -Value "SQL_USER=$SQL_USER"
+          Add-Content -Path $env:GITHUB_ENV -Value "SQL_PASSWORD=$SQL_PASSWORD"
+          Add-Content -Path $env:GITHUB_ENV -Value 
 
       - name: 🏃‍♂️‍➡️ Verify environment variables
         shell: pwsh
