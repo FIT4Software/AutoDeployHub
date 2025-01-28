@@ -30,11 +30,6 @@ jobs:
 
       - name: 🏃‍♂️‍➡️ Execute SQL Scripts in Order 
         shell: pwsh
-        # env:
-        #   SQL_SERVER: ${{ secrets.SQL_SERVER }}
-        #   SQL_USER: ${{ secrets.SQL_USER }}
-        #   SQL_PASSWORD: ${{ secrets.SQL_PASSWORD }}
-        #   SQL_DATABASE: ${{ secrets.SQL_DATABASE }}
         run: |
           # Get all folders and subfolders sorted in ascending order.
           $folders = Get-ChildItem -Path "220 - SQL" -Recurse -Directory | Sort-Object FullName
