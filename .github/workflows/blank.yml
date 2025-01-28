@@ -23,6 +23,9 @@ jobs:
           # Leer archivo JSON
           $config = Get-Content -Raw -Path "Config.json" | ConvertFrom-Json
           
+          # Verificar el contenido del archivo JSON
+          Write-Output "Config Loaded: $config"
+          
           # Establecer las variables de entorno usando $GITHUB_ENV
           echo "SQL_SERVER_DATA=$($config.SQL_SERVER_DATA)" >> $GITHUB_ENV
           echo "SQL_USER=$($config.SQL_USER)" >> $GITHUB_ENV
