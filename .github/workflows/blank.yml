@@ -9,6 +9,12 @@ jobs:
   connect-sql-server:
     runs-on: windows-latest
 
+    env:
+      SQL_SERVER_DATA: ${{ secrets.SQL_SERVER_DATA }}
+      SQL_USER: ${{ secrets.SQL_USER }}
+      SQL_PASSWORD: ${{ secrets.SQL_PASSWORD }}
+      SQL_DATABASE: ${{ secrets.SQL_DATABASE }}
+
     steps:
       - name: ⚙️ Checkout code
         uses: actions/checkout@v2
@@ -22,6 +28,12 @@ jobs:
           
           # Verificar el contenido del archivo JSON
           Write-Output "Config Loaded: $config"
+
+          # Exportar valores como variables de entorno
+          $env:SQL_SERVER_DATA = $config.SQL_SERVER_DATA
+          $env:SQL_USER = $config.SQL_USER
+          $env:SQL_PASSWORD = $config.SQL_PASSWORD
+          $env:SQL_DATABASE = $config.SQL_DATABASE
           
 
       - name: 🛠️ Install SQL Server tools
@@ -29,11 +41,11 @@ jobs:
       
       - name: 🏃‍♂️‍➡️ Execute SQL Scripts in Order
         shell: pwsh
-        env:
-          SQL_SERVER_DATA: ${{ secrets.SQL_SERVER }}
-          SQL_USER: ${{ secrets.SQL_USER }}
-          SQL_PASSWORD: ${{ secrets.SQL_PASSWORD }}
-          SQL_DATABASE: ${{ secrets.SQL_DATABASE }}
+        # env:
+        #   SQL_SERVER_DATA: ${{ secrets.SQL_SERVER }}
+        #   SQL_USER: ${{ secrets.SQL_USER }}
+        #   SQL_PASSWORD: ${{ secrets.SQL_PASSWORD }}
+        #   SQL_DATABASE: ${{ secrets.SQL_DATABASE }}
         run: |     
           # Continuar con la ejecución de los scripts SQL
           $folders = Get-ChildItem -Path "220 - SQL" -Recurse -Directory | Sort-Object FullName
