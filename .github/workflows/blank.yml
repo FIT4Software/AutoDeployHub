@@ -58,9 +58,11 @@ jobs:
             $zipFile = "$env:PATH_RELEASE_APP"
             $parentFolder = Split-Path -Path $zipFile -Parent
             $unzipFolder = Join-Path -Path $parentFolder -ChildPath "extracted"
-      
-            # Debugging: Output the final zip file path
-            Write-Output "Checking for ZIP file at: $zipFile"
+
+            # Debugging: Output paths before proceeding
+            Write-Output "ZIP File Path: $zipFile"
+            Write-Output "Parent Folder: $parentFolder"
+            Write-Output "Extraction Folder: $unzipFolder"
         
             # Check if the zip file exists
             if (Test-Path -Path $zipFile) {
