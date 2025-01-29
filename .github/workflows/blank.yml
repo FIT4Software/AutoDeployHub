@@ -57,7 +57,7 @@ jobs:
       - name: 🏃‍♂️‍➡️ Execute SQL Scripts in Order
         shell: pwsh
         run: |     
-            $folders = Get-ChildItem -Path $env:PATH_RELEASE_APP\extracted -Recurse -Directory | Sort-Object FullName
+            $folders = Get-ChildItem -Path $env:PATH_RELEASE_APP -Recurse -Directory | Sort-Object FullName
             
             foreach ($folder in $folders) {
               if ($folder.Name -notmatch '^\d') {
