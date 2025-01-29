@@ -68,6 +68,7 @@ jobs:
                 # Create a temporary folder to unzip to
                 if (-Not (Test-Path -Path $unzipFolder)) {
                     Write-Output "Creating extraction folder at: $unzipFolder"
+                    Write-Output "El error es de aca"
                     New-Item -ItemType Directory -Path $unzipFolder
                 }
         
