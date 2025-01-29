@@ -56,8 +56,9 @@ jobs:
         run: |
             # Ensure the .zip file exists and then unzip it
             $zipFile = "$env:PATH_RELEASE_APP"
-            $unzipFolder = "$env:PATH_RELEASE_APP\extracted"
-        
+            $parentFolder = Split-Path -Path $zipFile -Parent
+            $unzipFolder = Join-Path -Path $parentFolder -ChildPath "extracted"
+      
             # Debugging: Output the final zip file path
             Write-Output "Checking for ZIP file at: $zipFile"
         
