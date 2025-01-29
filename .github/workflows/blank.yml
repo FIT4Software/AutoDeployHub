@@ -59,49 +59,62 @@ jobs:
               $parentFolder = Split-Path -Path $zipFile -Parent
               $unzipFolder = Join-Path -Path $parentFolder -ChildPath "extracted"
         
-              # Debugging: Verificar rutas antes de continuar
-              Write-Output "DEBUG - ZIP File Path: $zipFile"
-              Write-Output "DEBUG - Parent Folder: $parentFolder"
-              Write-Output "DEBUG - Extraction Folder: $unzipFolder"
-          
-              # Verificar si el archivo ZIP existe
+              # Depuración: Verificar las rutas antes de continuar
+              Write-Output "DEBUG - Ruta del archivo ZIP: $zipFile"
+              Write-Output "DEBUG - Carpeta Padre: $parentFolder"
+              Write-Output "DEBUG - Carpeta de Extracción: $unzipFolder"
+        
+              # Verificar si la ruta del archivo ZIP es válida
               if (-Not (Test-Path -Path $zipFile)) {
                   Write-Error "❌ ERROR: No se encontró el archivo ZIP en $zipFile"
                   exit 1
+              } else {
+                  Write-Output "✅ Archivo ZIP encontrado: $zipFile"
               }
         
-              # Crear la carpeta 'extracted' si no existe
-              if (-Not (Test-Path -Path $unzipFolder)) {
-                  Write-Output "📂 Creando carpeta de extracción: $unzipFolder"
+              # Verificar si la carpeta padre existe, si no, crearla
+              if (-Not (Test-Path -Path $parentFolder)) {
+                  Write-Output "❌ ERROR: La carpeta padre no existe: $parentFolder"
+                  exit 1
+              } else {
+                  Write-Output "✅ Carpeta padre existe: $parentFolder"
+              }
+        
+              # Verificar si la carpeta 'extracted' ya existe
+              if (Test-Path -Path $unzipFolder) {
+                  Write-Output "📂 La carpeta de extracción ya existe: $unzipFolder"
+              } else {
+                  Write-Output "📂 Creando la carpeta de extracción: $unzipFolder"
                   New-Item -ItemType Directory -Path $unzipFolder -Force | Out-Null
         
-                  # Verificar que la carpeta realmente se creó
+                  # Verificar si la carpeta se creó correctamente
                   if (-Not (Test-Path -Path $unzipFolder)) {
                       Write-Error "❌ ERROR: No se pudo crear la carpeta de extracción en $unzipFolder"
                       exit 1
+                  } else {
+                      Write-Output "✅ Carpeta de extracción creada exitosamente: $unzipFolder"
                   }
-              } else {
-                  Write-Output "📂 Carpeta de extracción ya existe: $unzipFolder"
               }
         
               # Descomprimir el archivo ZIP
               Write-Output "📦 Descomprimiendo el archivo ZIP en: $unzipFolder"
               try {
                   Expand-Archive -Path $zipFile -DestinationPath $unzipFolder -Force
-                  Write-Output "✅ Archivo descomprimido con éxito."
+                  Write-Output "✅ Archivo descomprimido exitosamente."
               } catch {
                   Write-Error "❌ ERROR: Falló la extracción del ZIP: $_"
                   exit 1
               }
         
-              # Verificar que la extracción se realizó correctamente
+              # Verificar si los archivos fueron extraídos correctamente
               $extractedFiles = Get-ChildItem -Path $unzipFolder -Recurse
               if ($extractedFiles.Count -eq 0) {
                   Write-Error "❌ ERROR: No se encontraron archivos extraídos en $unzipFolder"
                   exit 1
               } else {
-                  Write-Output "📂 Se extrajeron $($extractedFiles.Count) archivos."
+                  Write-Output "📂 Se extrajeron $($extractedFiles.Count) archivos en $unzipFolder"
               }
+        
               
       - name: 🛠️ Install SQL Server tools
         run: choco install sqlcmd
