@@ -50,55 +50,55 @@ jobs:
           Write-Output "SQL_PASSWORD: $env:SQL_PASSWORD"
           Write-Output "SQL_DATABASE: $env:SQL_DATABASE"
           Write-Output "PATH_RELEASE_APP: $env:PATH_RELEASE_APP"
+
+          - name: 📦 Unzip the release package
+          shell: pwsh
+          run: |
+            # Ensure the .zip file exists and then unzip it
+            $zipFile = "$env:PATH_RELEASE_APP"
+            $unzipFolder = "$env:PATH_RELEASE_APP\extracted"
+        
+            # Debugging: Output the final zip file path
+            Write-Output "Checking for ZIP file at: $zipFile"
+        
+            # Check if the zip file exists
+            if (Test-Path -Path $zipFile) {
+                Write-Output "Unzipping file $zipFile"
+                
+                # Create a temporary folder to unzip to
+                if (-Not (Test-Path -Path $unzipFolder)) {
+                    Write-Output "Creating extraction folder at: $unzipFolder"
+                    New-Item -ItemType Directory -Path $unzipFolder
+                }
+        
+                # Initialize the progress bar
+                $totalFiles = (Get-Content $zipFile | Measure-Object -Line).Lines  # Approximate number of files
+                $progress = 0
+        
+                # Extract the zip file and simulate progress
+                Expand-Archive -Path $zipFile -DestinationPath $unzipFolder -Force
+        
+                # Simulate progress bar for unzip operation
+                $files = Get-ChildItem -Path $unzipFolder -Recurse
+                $filesCount = $files.Count
+                $progressStep = [math]::Ceiling($filesCount / 100)
+                
+                for ($i = 1; $i -le $filesCount; $i++) {
+                    if ($i % $progressStep -eq 0) {
+                        $progress = [math]::Round(($i / $filesCount) * 100)
+                        Write-Progress -PercentComplete $progress -Status "Unzipping..." -Activity "$i of $filesCount files extracted"
+                    }
+                }
+        
+                Write-Output "Unzipped to $unzipFolder"
+            } else {
+                Write-Error "Zip file not found at $zipFile"
+                exit 1
+            }
         
       - name: 🛠️ Install SQL Server tools
         run: choco install sqlcmd
-      
-      - name: 📦 Unzip the release package
-        shell: pwsh
-        run: |
-          # Ensure the .zip file exists and then unzip it
-          $zipFile = "$env:PATH_RELEASE_APP"
-          $unzipFolder = "$env:PATH_RELEASE_APP\extracted"
-      
-          # Debugging: Output the final zip file path
-          Write-Output "Checking for ZIP file at: $zipFile"
-      
-          # Check if the zip file exists
-          if (Test-Path -Path $zipFile) {
-              Write-Output "Unzipping file $zipFile"
-              
-              # Create a temporary folder to unzip to
-              if (-Not (Test-Path -Path $unzipFolder)) {
-                  Write-Output "Creating extraction folder at: $unzipFolder"
-                  New-Item -ItemType Directory -Path $unzipFolder
-              }
-      
-              # Initialize the progress bar
-              $totalFiles = (Get-Content $zipFile | Measure-Object -Line).Lines  # Approximate number of files
-              $progress = 0
-      
-              # Extract the zip file and simulate progress
-              Expand-Archive -Path $zipFile -DestinationPath $unzipFolder -Force
-      
-              # Simulate progress bar for unzip operation
-              $files = Get-ChildItem -Path $unzipFolder -Recurse
-              $filesCount = $files.Count
-              $progressStep = [math]::Ceiling($filesCount / 100)
-              
-              for ($i = 1; $i -le $filesCount; $i++) {
-                  if ($i % $progressStep -eq 0) {
-                      $progress = [math]::Round(($i / $filesCount) * 100)
-                      Write-Progress -PercentComplete $progress -Status "Unzipping..." -Activity "$i of $filesCount files extracted"
-                  }
-              }
-      
-              Write-Output "Unzipped to $unzipFolder"
-          } else {
-              Write-Error "Zip file not found at $zipFile"
-              exit 1
-          }
-      
+           
       - name: 🏃‍♂️‍➡️ Execute SQL Scripts in Order
         shell: pwsh
         run: |     
