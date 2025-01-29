@@ -70,6 +70,7 @@ jobs:
                     Write-Output "Creating extraction folder at: $unzipFolder"
                     Write-Output "El error es de aca"
                     New-Item -ItemType Directory -Path $unzipFolder
+                    Write-Output "llego?"
                 }
         
                 # Initialize the progress bar
