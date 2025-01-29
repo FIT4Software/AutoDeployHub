@@ -51,9 +51,9 @@ jobs:
           Write-Output "SQL_DATABASE: $env:SQL_DATABASE"
           Write-Output "PATH_RELEASE_APP: $env:PATH_RELEASE_APP"
 
-          - name: 📦 Unzip the release package
-          shell: pwsh
-          run: |
+      - name: 📦 Unzip the release package
+        shell: pwsh
+        run: |
             # Ensure the .zip file exists and then unzip it
             $zipFile = "$env:PATH_RELEASE_APP"
             $unzipFolder = "$env:PATH_RELEASE_APP\extracted"
