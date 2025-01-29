@@ -99,8 +99,6 @@ jobs:
               exit 1
           }
       
-      
-
       - name: 🏃‍♂️‍➡️ Execute SQL Scripts in Order
         shell: pwsh
         run: |     
