@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
 
 jobs:
-  connect-sql-server:
+  database-deployment:
     runs-on: windows-latest
     env:
       SQL_SERVER_DATA: ""
