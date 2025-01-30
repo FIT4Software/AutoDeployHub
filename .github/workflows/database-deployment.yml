@@ -13,7 +13,7 @@ jobs:
       SQL_USER: ""
       SQL_PASSWORD: ""
       SQL_DATABASE: ""
-      PATH_RELEASE_APP: ""
+      PATH_RELEASE_IODS: ""
 
     steps:
       - name: ⚙️ Checkout code
@@ -33,14 +33,14 @@ jobs:
           $SQL_USER = $config.SQL_USER
           $SQL_PASSWORD = $config.SQL_PASSWORD
           $SQL_DATABASE = $config.SQL_DATABASE
-          $PATH_RELEASE_APP = $config.PATH_RELEASE_APP
+          $PATH_RELEASE_IODS = $config.PATH_RELEASE_IODS
 
           # Assign JSON values to environment variables
           Add-Content -Path $env:GITHUB_ENV -Value "SQL_SERVER_DATA=$SQL_SERVER_DATA"
           Add-Content -Path $env:GITHUB_ENV -Value "SQL_USER=$SQL_USER"
           Add-Content -Path $env:GITHUB_ENV -Value "SQL_PASSWORD=$SQL_PASSWORD"
           Add-Content -Path $env:GITHUB_ENV -Value "SQL_DATABASE=$SQL_DATABASE"
-          Add-Content -Path $env:GITHUB_ENV -Value "PATH_RELEASE_APP=$PATH_RELEASE_APP"
+          Add-Content -Path $env:GITHUB_ENV -Value "PATH_RELEASE_IODS=$PATH_RELEASE_IODS"
 
       - name: 📝 Verify environment variables
         shell: pwsh
@@ -49,7 +49,7 @@ jobs:
           Write-Output "SQL_USER: $env:SQL_USER"
           Write-Output "SQL_PASSWORD: $env:SQL_PASSWORD"
           Write-Output "SQL_DATABASE: $env:SQL_DATABASE"
-          Write-Output "PATH_RELEASE_APP: $env:PATH_RELEASE_APP"       
+          Write-Output "PATH_RELEASE_IODS: $env:PATH_RELEASE_IODS"       
               
       - name: 🛠️ Install SQL Server tools
         run: choco install sqlcmd
@@ -73,7 +73,7 @@ jobs:
       - name: 🏃‍♂️‍➡️ Execute SQL Scripts in Order
         shell: pwsh
         run: |     
-            $folders = Get-ChildItem -Path $env:PATH_RELEASE_APP -Recurse -Directory | Sort-Object FullName
+            $folders = Get-ChildItem -Path $env:PATH_RELEASE_IODS -Recurse -Directory | Sort-Object FullName
             
             foreach ($folder in $folders) {
               if ($folder.Name -notmatch '^\d') {
