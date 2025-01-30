@@ -17,7 +17,7 @@ jobs:
 
     steps:
       - name: ⚙️ Checkout code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
 
       - name: 📄 Load configuration from JSON
         shell: pwsh
@@ -83,3 +83,14 @@ jobs:
                 }
               }
             }
+  
+  api-deployment:
+    runs-on: windows-latest
+    needs: database-deployment 
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v3
+    
+      - name: Deploy API to IIS
+        run: |
+          echo "Desplegando API en IIS..."
