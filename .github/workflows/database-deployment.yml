@@ -53,6 +53,22 @@ jobs:
               
       - name: 🛠️ Install SQL Server tools
         run: choco install sqlcmd
+
+      - name: 🔍 Check Database Connection
+        shell: pwsh
+        run: |
+          try {
+            Write-Output "Checking database connection..."
+            $output = sqlcmd -S $env:SQL_SERVER_DATA -U $env:SQL_USER -P $env:SQL_PASSWORD -Q "SELECT 1" 2>&1
+            if ($output -match 'Msg \d+, Level \d+, State \d+, Server .+, Line \d+') {
+              Write-Error "❌ Database connection failed: $output"
+              exit 1
+            }
+            Write-Output "✅ Database connection successful"
+          } catch {
+            Write-Error "❌ Failed to check database connection: $($_.Exception.Message)"
+            exit 1
+          }
            
       - name: 🏃‍♂️‍➡️ Execute SQL Scripts in Order
         shell: pwsh

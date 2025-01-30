@@ -1,5 +1,5 @@
 {
-    "SQL_SERVER_DATA": "mes-arido-database.database.windows.net.net",
+    "SQL_SERVER_DATA": "mes-arido-database.database.windows.net",
     "SQL_USER": "opdbmanager",
     "SQL_PASSWORD": "DBM4n4g3r",
     "SQL_DATABASE": "AutoDeployHubDB",
