@@ -1,4 +1,4 @@
-name: CI
+name: iods-auto-deploy
 
 on:
   push:
