@@ -2,9 +2,9 @@
     "SQL_SERVER_DATA": "mes-arido-database.database.windows.net",
     "SQL_USER": "opdbmanager",
     "SQL_PASSWORD": "DBM4n4g3r",
-    "SQL_DATABASE_IODS": "AutoDeployHubDB",
+    "SQL_DATABASE_IODS": "Auto_opsDataStore",
     "PATH_RELEASE_IODS": "IODS - 220 - SQL",
-    "SQL_DATABASE_PROFICY": "GBDB_AUTO_DEP",
+    "SQL_DATABASE_PROFICY": "Auto_GBDB",
     "PATH_RELEASE_PROFICY":"HTML5 - 220 - SQL"
   }
   

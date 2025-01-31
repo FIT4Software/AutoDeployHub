@@ -3,7 +3,7 @@ GO
 
 --------------------------------------------------------------------------------------------------------------
 -- 										OPS Database Script													--	
---								This Script creates the AutoDeployHubDB database								--
+--								This Script creates the Auto_opsDataStore database								--
 --------------------------------------------------------------------------------------------------------------
 -- 										SET TAB SPACING TO 4												--	
 --------------------------------------------------------------------------------------------------------------
@@ -12,11 +12,11 @@ GO
 -- 2022-04-13	Mauro Pasetti		AUTHORIZATION to [sa]
 --------------------------------------------------------------------------------------------------------------
 
-IF NOT EXISTS (SELECT * FROM master.dbo.sysdatabases WHERE name = N'AutoDeployHubDB')
+IF NOT EXISTS (SELECT * FROM master.dbo.sysdatabases WHERE name = N'Auto_opsDataStore')
 BEGIN
 	--CREATE NEW Data Base
-	CREATE DATABASE [AutoDeployHubDB]
-	ALTER DATABASE [AutoDeployHubDB] SET RECOVERY SIMPLE
-	ALTER AUTHORIZATION ON DATABASE::[AutoDeployHubDB] TO [sa]
+	CREATE DATABASE [Auto_opsDataStore]
+	ALTER DATABASE [Auto_opsDataStore] SET RECOVERY SIMPLE
+	ALTER AUTHORIZATION ON DATABASE::[Auto_opsDataStore] TO [sa]
 END
 GO

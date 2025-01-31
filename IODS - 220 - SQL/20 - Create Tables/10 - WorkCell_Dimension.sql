@@ -1,6 +1,6 @@
 -------------------------------------------------------------------------------------------------------------
 -- 										OPS Database Script														--	
---						This Script will create the WorkCell_Dimension table in AutoDeployHubDB					--
+--						This Script will create the WorkCell_Dimension table in Auto_opsDataStore					--
 -------------------------------------------------------------------------------------------------------------
 -- 										SET TAB SPACING TO 4													--	
 -------------------------------------------------------------------------------------------------------------
