@@ -253,7 +253,7 @@ jobs:
         
                         # Check for errors in the SQL execution
                         if ($updateOutput -match 'Msg \d+, Level \d+, State \d+, Server .+, Line \d+') {
-                            Write-Error "❌ Error updating Id=$id: $updateOutput"
+                            Write-Error "❌ Error updating Id=$id: $($updateOutput)"
                             exit 1
                         }
                     }
