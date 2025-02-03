@@ -14,6 +14,8 @@ jobs:
       SQL_PASSWORD: ""
       SQL_DATABASE_IODS: ""
       PATH_RELEASE_IODS: ""
+      SQL_DATABASE_PROFICY: ""
+      PATH_RELEASE_PROFICY: ""
 
     steps:
       - name: ⚙️ Checkout code
@@ -34,6 +36,8 @@ jobs:
           $SQL_PASSWORD = $config.SQL_PASSWORD
           $SQL_DATABASE_IODS = $config.SQL_DATABASE_IODS
           $PATH_RELEASE_IODS = $config.PATH_RELEASE_IODS
+          $SQL_DATABASE_PROFICY = $config.SQL_DATABASE_PROFICY
+          $PATH_RELEASE_PROFICY = $config.PATH_RELEASE_PROFICY
 
           # Assign JSON values to environment variables
           Add-Content -Path $env:GITHUB_ENV -Value "SQL_SERVER_DATA=$SQL_SERVER_DATA"
@@ -41,6 +45,8 @@ jobs:
           Add-Content -Path $env:GITHUB_ENV -Value "SQL_PASSWORD=$SQL_PASSWORD"
           Add-Content -Path $env:GITHUB_ENV -Value "SQL_DATABASE_IODS=$SQL_DATABASE_IODS"
           Add-Content -Path $env:GITHUB_ENV -Value "PATH_RELEASE_IODS=$PATH_RELEASE_IODS"
+          Add-Content -Path $env:GITHUB_ENV -Value "SQL_DATABASE_PROFICY=$SQL_DATABASE_PROFICY"
+          Add-Content -Path $env:GITHUB_ENV -Value "PATH_RELEASE_PROFICY=$PATH_RELEASE_PROFICY"
 
       - name: 📝 Verify environment variables
         shell: pwsh
@@ -49,12 +55,14 @@ jobs:
           Write-Output "SQL_USER: $env:SQL_USER"
           Write-Output "SQL_PASSWORD: $env:SQL_PASSWORD"
           Write-Output "SQL_DATABASE_IODS: $env:SQL_DATABASE_IODS"
-          Write-Output "PATH_RELEASE_IODS: $env:PATH_RELEASE_IODS"       
+          Write-Output "PATH_RELEASE_IODS: $env:PATH_RELEASE_IODS"  
+          Write-Output "SQL_DATABASE_PROFICY: $env:SQL_DATABASE_PROFICY"
+          Write-Output "PATH_RELEASE_PROFICY: $env:PATH_RELEASE_PROFICY"     
               
       - name: 🛠️ Install SQL Server tools
         run: choco install sqlcmd
 
-      - name: 🔍 Check Database Connection
+      - name: 🔍 Check Server Connection
         shell: pwsh
         run: |
           try {
@@ -69,8 +77,81 @@ jobs:
             Write-Error "❌ Failed to check database connection: $($_.Exception.Message)"
             exit 1
           }
-           
-      - name: 🏃‍♂️‍➡️ Execute SQL Scripts in Order
+        
+      - name: 🔌Check opsDataStore Database Connection
+        shell: pwsh
+        run: |
+            try {
+              Write-Output "Checking opsDataStore database connection..."
+              $output = sqlcmd -S $env:SQL_SERVER_DATA -U $env:SQL_USER -P $env:SQL_PASSWORD -d $env:SQL_DATABASE_IODS -Q "SELECT 1" 2>&1
+              if ($output -match 'Msg \d+, Level \d+, State \d+, Server .+, Line \d+') {
+                Write-Output "❗Database connection failed: $output"
+                exit 1
+              }
+              Write-Output "✅ opsDataStore Database connection successful"
+            } catch {
+              Write-Output "❗Failed to check opsDataStore database connection: $($_.Exception.Message)"
+              exit 1
+            }
+        
+      - name: 🔌Check GBDB Database Connection
+        shell: pwsh
+        run: |
+            try {
+              Write-Output "Checking GBDB database connection..."
+              $output = sqlcmd -S $env:SQL_SERVER_DATA -U $env:SQL_USER -P $env:SQL_PASSWORD -d $env:SQL_DATABASE_PROFICY -Q "SELECT 1" 2>&1
+              if ($output -match 'Msg \d+, Level \d+, State \d+, Server .+, Line \d+') {
+                Write-Output "❗Database connection failed: $output"
+                exit 1
+              }
+              Write-Output "✅ GBDB Database connection successful"
+            } catch {
+              Write-Output "❗Failed to check GBDB database connection: $($_.Exception.Message)"
+              exit 1
+            }
+      
+      - name: 📥 Save ScheduleTaskManager to JSON and Deactivate Tasks
+        shell: pwsh
+        run: |
+              try {
+                Write-Output "Fetching data from ScheduleTaskManager..."
+          
+                # Define the path for the JSON file
+                $jsonFile = "ScheduleTaskManager.json"
+          
+                # Execute the SELECT query and convert the result to JSON
+                $query = "SELECT * FROM ScheduleTaskManager FOR JSON AUTO"
+                $output = sqlcmd -S $env:SQL_SERVER_DATA -U $env:SQL_USER -P $env:SQL_PASSWORD -d $env:SQL_DATABASE_IODS -Q $query -h -1 -W
+          
+                # Check for errors in the SQL query execution
+                if ($output -match 'Msg \d+, Level \d+, State \d+, Server .+, Line \d+') {
+                  Write-Error "❌ Error fetching data: $output"
+                  exit 1
+                }
+          
+                # Save the output to a JSON file
+                $output | Out-File -Encoding utf8 $jsonFile
+                Write-Output "✅ Data exported successfully to $jsonFile"
+          
+                # Execute the UPDATE query to set Active column to 0 (deactivate tasks)
+                Write-Output "Deactivating tasks by updating Active column to 0..."
+                $updateQuery = "UPDATE ScheduleTaskManager SET Active = 0"
+                $updateOutput = sqlcmd -S $env:SQL_SERVER_DATA -U $env:SQL_USER -P $env:SQL_PASSWORD -d $env:SQL_DATABASE_IODS -Q $updateQuery
+          
+                # Check for errors in the update execution
+                if ($updateOutput -match 'Msg \d+, Level \d+, State \d+, Server .+, Line \d+') {
+                  Write-Error "❌ Error deactivating tasks: $updateOutput"
+                  exit 1
+                }
+          
+                Write-Output "✅ Tasks deactivated successfully"
+              } catch {
+                # Handle any unexpected errors
+                Write-Error "❌ Failed to process ScheduleTaskManager: $($_.Exception.Message)"
+                exit 1
+              }
+                  
+      - name: 🏃‍♂️‍➡️ Execute SQL scripts in the opsDataStore database
         shell: pwsh
         run: |     
             $folders = Get-ChildItem -Path $env:PATH_RELEASE_IODS -Recurse -Directory | Sort-Object FullName
@@ -99,6 +180,36 @@ jobs:
                 }
               }
             }
+      
+      - name: 🏃‍♂️‍➡️ Execute SQL scripts in the GBDB database
+        shell: pwsh
+        run: |     
+                $folders = Get-ChildItem -Path $env:PATH_RELEASE_PROFICY -Recurse -Directory | Sort-Object FullName
+                
+                foreach ($folder in $folders) {
+                  if ($folder.Name -notmatch '^\d') {
+                    Write-Output "Skipping folder (no number in name): $($folder.FullName)"
+                    continue
+                  }
+                  Write-Output "Processing folder: $($folder.FullName)"
+                  $sqlFiles = Get-ChildItem -Path $folder.FullName -Filter *.sql | Sort-Object Name
+                
+                  foreach ($file in $sqlFiles) {            
+                    try {
+                      Write-Output "Executing $($file.FullName)..."
+                      $output = sqlcmd -S $env:SQL_SERVER_DATA -U $env:SQL_USER -P $env:SQL_PASSWORD -d $env:SQL_DATABASE_PROFICY -i $file.FullName 2>&1
+                      Write-Output "Result of $($file.Name):"
+                      if ($output -match 'Msg \d+, Level \d+, State \d+, Server .+, Line \d+') {
+                        Write-Output "❗Error executing $($file.Name): $output"
+                      } 
+                      else {
+                        Write-Output "✅ Successfully executed $($file.Name)"
+                      }
+                    } catch {
+                      Write-Error "❌ Failed to execute $($file.Name): $($_.Exception.Message)"
+                    }
+                  }
+                }
   
   api-deployment:
     runs-on: windows-latest
