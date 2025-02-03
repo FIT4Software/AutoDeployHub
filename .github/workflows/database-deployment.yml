@@ -120,7 +120,7 @@ jobs:
                     $jsonFile = "ScheduleTaskManager.json"
                   
                     # Execute the SELECT query and convert the result to JSON
-                    $query = "SELECT * FROM ScheduleTaskManager FOR JSON AUTO"
+                    $query = "SELECT top 1 * FROM ScheduleTaskManager FOR JSON AUTO"
                     $output = sqlcmd -S $env:SQL_SERVER_DATA -U $env:SQL_USER -P $env:SQL_PASSWORD -d $env:SQL_DATABASE_IODS -Q $query -h -1 -W
                   
                     # Check for errors in the SQL query execution
