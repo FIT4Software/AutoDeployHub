@@ -16,7 +16,6 @@ jobs:
       PATH_RELEASE_IODS: ""
       SQL_DATABASE_PROFICY: ""
       PATH_RELEASE_PROFICY: ""
-      SCHEDULE_TASKS_JSON: ""
 
     steps:
       - name: ⚙️ Checkout code
@@ -130,15 +129,18 @@ jobs:
                     exit 1
                 }
               
-                # Read the content of the JSON file
+                # Save the output to a JSON file
+                $output | Out-File -Encoding utf8 $jsonFile
+                Write-Output "✅ Data exported successfully to $jsonFile"
+
+                # Print the absolute path of the JSON file
+                Write-Output "📂 JSON file saved at: $(Resolve-Path $jsonFile)"
+
+                # Read and log the content of the saved JSON file before converting it to an object
+                Write-Output "Reading and displaying the content of the saved JSON file:"
                 $jsonContentRaw = Get-Content -Path $jsonFile -Raw
-
-                # Store the JSON content in an environment variable
-                $env:SCHEDULE_TASKS_JSON = $jsonContentRaw
-
-                # Print the environment variable
-                Write-Output "📂 JSON stored in environment variable: `$env:SCHEDULE_TASKS_JSON"
-                                             
+                Write-Output $jsonContentRaw
+                              
                 # Execute the UPDATE query to set Active column to 0 (deactivate tasks)
                 Write-Output "Deactivating tasks by updating Active column to 0..."
                 $updateQuery = "UPDATE ScheduleTaskManager SET Active = 0"
