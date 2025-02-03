@@ -148,16 +148,15 @@ jobs:
                 if ($updateOutput -match 'Msg \d+, Level \d+, State \d+, Server .+, Line \d+') {
                     Write-Error "❌ Error deactivating tasks: $updateOutput"
                     exit 1
-                }
-              
+                }             
                 Write-Output "✅ Tasks deactivated successfully"
-              } catch {
+              } 
+              catch {
                 # Handle any unexpected errors
                 Write-Error "❌ Failed to process ScheduleTaskManager: $($_.Exception.Message)"
                 exit 1
               } 
-
-          
+       
       - name: 🏃‍♂️‍➡️ Execute SQL scripts in the opsDataStore database
         shell: pwsh
         run: |     
