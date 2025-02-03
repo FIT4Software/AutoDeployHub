@@ -139,9 +139,9 @@ jobs:
             
                 # Iterate through each task in the JSON and display its values
                 foreach ($task in $jsonContent) {
-                  Write-Output "TaskID: $($task.TaskID)"
+                  Write-Output "Id: $($task.Id)"
                   Write-Output "TaskName: $($task.TaskName)"
-                  Write-Output "ScheduledTime: $($task.ScheduledTime)"
+                  Write-Output "SPName: $($task.SPName)"
                   Write-Output "Active: $($task.Active)"
                   Write-Output "------------------------------"
                 }
