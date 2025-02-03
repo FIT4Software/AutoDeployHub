@@ -137,28 +137,7 @@ jobs:
                     Write-Output "Reading and displaying the content of the saved JSON file:"
                     $jsonContentRaw = Get-Content -Path $jsonFile -Raw
                     Write-Output $jsonContentRaw
-                  
-                    # Clean up extra characters like headers and footers that might be added by sqlcmd
-                    $jsonContentRaw = $jsonContentRaw.Trim()
-
-                    # Check if the JSON is wrapped in a list (which it should be)
-                    if ($jsonContentRaw.StartsWith('[') -and $jsonContentRaw.EndsWith(']')) {
-                        # Convert the JSON content into an object
-                        $jsonContent = $jsonContentRaw | ConvertFrom-Json
-
-                        # Iterate through each task in the JSON and display its values
-                        foreach ($task in $jsonContent) {
-                            Write-Output "Id: $($task.Id)"
-                            Write-Output "TaskName: $($task.TaskName)"
-                            Write-Output "SPName: $($task.SPName)"
-                            Write-Output "Active: $($task.Active)"
-                            Write-Output "-------------------------------"
-                        }
-                    } else {
-                        Write-Error "❌ The JSON data format is incorrect."
-                        exit 1
-                    }
-                  
+                                   
                     # Execute the UPDATE query to set Active column to 0 (deactivate tasks)
                     Write-Output "Deactivating tasks by updating Active column to 0..."
                     $updateQuery = "UPDATE ScheduleTaskManager SET Active = 0"
