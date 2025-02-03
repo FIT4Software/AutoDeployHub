@@ -114,47 +114,51 @@ jobs:
         shell: pwsh
         run: |
               try {
-                    Write-Output "Fetching data from ScheduleTaskManager..."
-                  
-                    # Define the path for the JSON file
-                    $jsonFile = "ScheduleTaskManager.json"
-                  
-                    # Execute the SELECT query and convert the result to JSON
-                    $query = "SELECT * FROM ScheduleTaskManager FOR JSON AUTO"
-                    $output = sqlcmd -S $env:SQL_SERVER_DATA -U $env:SQL_USER -P $env:SQL_PASSWORD -d $env:SQL_DATABASE_IODS -Q $query -h -1 -W
-                  
-                    # Check for errors in the SQL query execution
-                    if ($output -match 'Msg \d+, Level \d+, State \d+, Server .+, Line \d+') {
-                        Write-Error "❌ Error fetching data: $output"
-                        exit 1
-                    }
-                  
-                    # Save the output to a JSON file
-                    $output | Out-File -Encoding utf8 $jsonFile
-                    Write-Output "✅ Data exported successfully to $jsonFile"
-
-                    # Read and log the content of the saved JSON file before converting it to an object
-                    Write-Output "Reading and displaying the content of the saved JSON file:"
-                    $jsonContentRaw = Get-Content -Path $jsonFile -Raw
-                    Write-Output $jsonContentRaw
-                                   
-                    # Execute the UPDATE query to set Active column to 0 (deactivate tasks)
-                    Write-Output "Deactivating tasks by updating Active column to 0..."
-                    $updateQuery = "UPDATE ScheduleTaskManager SET Active = 0"
-                    $updateOutput = sqlcmd -S $env:SQL_SERVER_DATA -U $env:SQL_USER -P $env:SQL_PASSWORD -d $env:SQL_DATABASE_IODS -Q $updateQuery
-                  
-                    # Check for errors in the update execution
-                    if ($updateOutput -match 'Msg \d+, Level \d+, State \d+, Server .+, Line \d+') {
-                        Write-Error "❌ Error deactivating tasks: $updateOutput"
-                        exit 1
-                    }
-                  
-                    Write-Output "✅ Tasks deactivated successfully"
-                } catch {
-                    # Handle any unexpected errors
-                    Write-Error "❌ Failed to process ScheduleTaskManager: $($_.Exception.Message)"
+                Write-Output "Fetching data from ScheduleTaskManager..."
+              
+                # Define the path for the JSON file
+                $jsonFile = Join-Path $PWD "ScheduleTaskManager.json"
+              
+                # Execute the SELECT query and convert the result to JSON
+                $query = "SELECT * FROM ScheduleTaskManager FOR JSON AUTO"
+                $output = sqlcmd -S $env:SQL_SERVER_DATA -U $env:SQL_USER -P $env:SQL_PASSWORD -d $env:SQL_DATABASE_IODS -Q $query -h -1 -W
+              
+                # Check for errors in the SQL query execution
+                if ($output -match 'Msg \d+, Level \d+, State \d+, Server .+, Line \d+') {
+                    Write-Error "❌ Error fetching data: $output"
                     exit 1
                 }
+              
+                # Save the output to a JSON file
+                $output | Out-File -Encoding utf8 $jsonFile
+                Write-Output "✅ Data exported successfully to $jsonFile"
+
+                # Print the absolute path of the JSON file
+                Write-Output "📂 JSON file saved at: $(Resolve-Path $jsonFile)"
+
+                # Read and log the content of the saved JSON file before converting it to an object
+                Write-Output "Reading and displaying the content of the saved JSON file:"
+                $jsonContentRaw = Get-Content -Path $jsonFile -Raw
+                Write-Output $jsonContentRaw
+                              
+                # Execute the UPDATE query to set Active column to 0 (deactivate tasks)
+                Write-Output "Deactivating tasks by updating Active column to 0..."
+                $updateQuery = "UPDATE ScheduleTaskManager SET Active = 0"
+                $updateOutput = sqlcmd -S $env:SQL_SERVER_DATA -U $env:SQL_USER -P $env:SQL_PASSWORD -d $env:SQL_DATABASE_IODS -Q $updateQuery
+              
+                # Check for errors in the update execution
+                if ($updateOutput -match 'Msg \d+, Level \d+, State \d+, Server .+, Line \d+') {
+                    Write-Error "❌ Error deactivating tasks: $updateOutput"
+                    exit 1
+                }
+              
+                Write-Output "✅ Tasks deactivated successfully"
+              } catch {
+                # Handle any unexpected errors
+                Write-Error "❌ Failed to process ScheduleTaskManager: $($_.Exception.Message)"
+                exit 1
+              } 
+
           
       - name: 🏃‍♂️‍➡️ Execute SQL scripts in the opsDataStore database
         shell: pwsh
