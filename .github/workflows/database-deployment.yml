@@ -79,19 +79,19 @@ jobs:
             exit 1
           }
         
-      - name: 🔌Check opsDataStore Database Connection
+      - name: 🔌Check Auto_opsDataStore Database Connection
         shell: pwsh
         run: |
             try {
-              Write-Output "Checking opsDataStore database connection..."
+              Write-Output "Checking Auto_opsDataStore database connection..."
               $output = sqlcmd -S $env:SQL_SERVER_DATA -U $env:SQL_USER -P $env:SQL_PASSWORD -d $env:SQL_DATABASE_IODS -Q "SELECT 1" 2>&1
               if ($output -match 'Msg \d+, Level \d+, State \d+, Server .+, Line \d+') {
                 Write-Output "❗Database connection failed: $output"
                 exit 1
               }
-              Write-Output "✅ opsDataStore Database connection successful"
+              Write-Output "✅ Auto_opsDataStore Database connection successful"
             } catch {
-              Write-Output "❗Failed to check opsDataStore database connection: $($_.Exception.Message)"
+              Write-Output "❗Failed to check Auto_opsDataStore database connection: $($_.Exception.Message)"
               exit 1
             }
         
@@ -160,9 +160,8 @@ jobs:
                     Write-Error "❌ Failed to process ScheduleTaskManager: $($_.Exception.Message)"
                     exit 1
                 }
-
     
-      - name: 🏃‍♂️‍➡️ Execute SQL scripts in the opsDataStore database
+      - name: 🏃‍♂️‍➡️ Execute SQL scripts in the Auto_opsDataStore database
         shell: pwsh
         run: |     
             $folders = Get-ChildItem -Path $env:PATH_RELEASE_IODS -Recurse -Directory | Sort-Object FullName
@@ -192,36 +191,81 @@ jobs:
               }
             }
       
-      - name: 🏃‍♂️‍➡️ Execute SQL scripts in the GBDB database
-        shell: pwsh
-        run: |     
-                $folders = Get-ChildItem -Path $env:PATH_RELEASE_PROFICY -Recurse -Directory | Sort-Object FullName
+      # - name: 🏃‍♂️‍➡️ Execute SQL scripts in the GBDB database
+      #   shell: pwsh
+      #   run: |     
+      #           $folders = Get-ChildItem -Path $env:PATH_RELEASE_PROFICY -Recurse -Directory | Sort-Object FullName
                 
-                foreach ($folder in $folders) {
-                  if ($folder.Name -notmatch '^\d') {
-                    Write-Output "Skipping folder (no number in name): $($folder.FullName)"
-                    continue
-                  }
-                  Write-Output "Processing folder: $($folder.FullName)"
-                  $sqlFiles = Get-ChildItem -Path $folder.FullName -Filter *.sql | Sort-Object Name
+      #           foreach ($folder in $folders) {
+      #             if ($folder.Name -notmatch '^\d') {
+      #               Write-Output "Skipping folder (no number in name): $($folder.FullName)"
+      #               continue
+      #             }
+      #             Write-Output "Processing folder: $($folder.FullName)"
+      #             $sqlFiles = Get-ChildItem -Path $folder.FullName -Filter *.sql | Sort-Object Name
                 
-                  foreach ($file in $sqlFiles) {            
-                    try {
-                      Write-Output "Executing $($file.FullName)..."
-                      $output = sqlcmd -S $env:SQL_SERVER_DATA -U $env:SQL_USER -P $env:SQL_PASSWORD -d $env:SQL_DATABASE_PROFICY -i $file.FullName 2>&1
-                      Write-Output "Result of $($file.Name):"
-                      if ($output -match 'Msg \d+, Level \d+, State \d+, Server .+, Line \d+') {
-                        Write-Output "❗Error executing $($file.Name): $output"
-                      } 
-                      else {
-                        Write-Output "✅ Successfully executed $($file.Name)"
-                      }
-                    } catch {
-                      Write-Error "❌ Failed to execute $($file.Name): $($_.Exception.Message)"
-                    }
-                  }
-                }
+      #             foreach ($file in $sqlFiles) {            
+      #               try {
+      #                 Write-Output "Executing $($file.FullName)..."
+      #                 $output = sqlcmd -S $env:SQL_SERVER_DATA -U $env:SQL_USER -P $env:SQL_PASSWORD -d $env:SQL_DATABASE_PROFICY -i $file.FullName 2>&1
+      #                 Write-Output "Result of $($file.Name):"
+      #                 if ($output -match 'Msg \d+, Level \d+, State \d+, Server .+, Line \d+') {
+      #                   Write-Output "❗Error executing $($file.Name): $output"
+      #                 } 
+      #                 else {
+      #                   Write-Output "✅ Successfully executed $($file.Name)"
+      #                 }
+      #               } catch {
+      #                 Write-Error "❌ Failed to execute $($file.Name): $($_.Exception.Message)"
+      #               }
+      #             }
+      #           }
   
+      - name: 🔄 Update Active Status in ScheduleTaskManager
+        shell: pwsh
+        run: |
+                try {
+                    Write-Output "📥 Reading JSON from environment variable..."
+        
+                    # Get the JSON from the environment variable
+                    $jsonContentRaw = $env:SCHEDULE_TASKS_JSON
+        
+                    # Convert the JSON into a PowerShell object array
+                    $tasks = $jsonContentRaw | ConvertFrom-Json
+        
+                    # Check if there are tasks in the JSON
+                    if (-not $tasks) {
+                        Write-Output "⚠️ No tasks found in JSON."
+                        exit 0
+                    }
+        
+                    # Iterate through each JSON object and execute the UPDATE query
+                    foreach ($task in $tasks) {
+                        $id = $task.Id
+                        $active = [int]$task.Active  # Convert boolean to 0 or 1
+        
+                        Write-Output "🔄 Updating ScheduleTaskManager: Id=$id, Active=$active"
+        
+                        $updateQuery = "UPDATE ScheduleTaskManager SET Active = $active WHERE Id = $id"
+        
+                        # Execute the SQL query
+                        $updateOutput = sqlcmd -S $env:SQL_SERVER_DATA -U $env:SQL_USER -P $env:SQL_PASSWORD -d $env:SQL_DATABASE_IODS -Q $updateQuery -h -1 -W
+        
+                        # Check for errors in the SQL execution
+                        if ($updateOutput -match 'Msg \d+, Level \d+, State \d+, Server .+, Line \d+') {
+                            Write-Error "❌ Error updating Id=$id: $updateOutput"
+                            exit 1
+                        }
+                    }
+        
+                    Write-Output "✅ All tasks updated successfully."
+        
+                } catch {
+                    Write-Error "❌ Failed to update ScheduleTaskManager: $($_.Exception.Message)"
+                    exit 1
+                }
+              
+
   api-deployment:
     runs-on: windows-latest
     needs: database-deployment 
