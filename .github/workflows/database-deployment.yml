@@ -132,6 +132,19 @@ jobs:
                 # Save the output to a JSON file
                 $output | Out-File -Encoding utf8 $jsonFile
                 Write-Output "✅ Data exported successfully to $jsonFile"
+
+                # Read the saved JSON file content and convert it into an object
+                Write-Output "Reading and displaying the content of the saved JSON file:"
+                $jsonContent = Get-Content -Path $jsonFile -Raw | ConvertFrom-Json
+            
+                # Iterate through each task in the JSON and display its values
+                foreach ($task in $jsonContent) {
+                  Write-Output "TaskID: $($task.TaskID)"
+                  Write-Output "TaskName: $($task.TaskName)"
+                  Write-Output "ScheduledTime: $($task.ScheduledTime)"
+                  Write-Output "Active: $($task.Active)"
+                  Write-Output "-----------------------------"
+                }
           
                 # Execute the UPDATE query to set Active column to 0 (deactivate tasks)
                 Write-Output "Deactivating tasks by updating Active column to 0..."
