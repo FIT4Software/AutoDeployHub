@@ -147,7 +147,7 @@ jobs:
                         Write-Output "TaskName: $($task.TaskName)"
                         Write-Output "SPName: $($task.SPName)"
                         Write-Output "Active: $($task.Active)"
-                        Write-Output "------------------------------"
+                        Write-Output "-------------------------------"
                     }
                   
                     # Execute the UPDATE query to set Active column to 0 (deactivate tasks)
