@@ -226,13 +226,13 @@ jobs:
         run: |
                 try {
                     Write-Output "📥 Reading JSON from environment variable..."
-
-                    Write-Output "Raw JSON length: $($jsonContentRaw.Length)"
+               
                     Write-Output "Raw JSON content: $env:SCHEDULE_TASKS_JSON"
         
                     # Get the JSON from the environment variable
                     $jsonContentRaw = $env:SCHEDULE_TASKS_JSON
-        
+                    Write-Output "Raw JSON length: $($jsonContentRaw.Length)"
+
                     # Convert the JSON into a PowerShell object array
                     $tasks = $jsonContentRaw | ConvertFrom-Json
         
