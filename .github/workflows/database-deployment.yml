@@ -111,12 +111,13 @@ jobs:
               exit 1
             }
       
-      - name: Crear archivo JSON en una carpeta externa al repo
+      - name: Crear archivo JSON en iods-auto-deploy
         run: |
-            mkdir -p $GITHUB_WORKSPACE/rtaiz  # Asegura que la carpeta exista
-            echo '{"mensaje": "Hola desde GitHub Actions"}' > $GITHUB_WORKSPACE/rtaiz/archivo.json
+            mkdir -p iods-auto-deploy  # Asegura que la carpeta exista
+            echo '{"mensaje": "Hola desde GitHub Actions"}' > iods-auto-deploy/archivo.json
         shell: bash
-                     
+          
+            
       - name: 📥 Save ScheduleTaskManager to JSON and Deactivate Tasks
         shell: pwsh
         run: |
