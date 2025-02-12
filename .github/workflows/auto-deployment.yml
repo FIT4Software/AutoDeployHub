@@ -116,10 +116,10 @@ jobs:
         run: |
               try {
                     Write-Output "Fetching data from ScheduleTaskManager..."
-                  
+
                     # Define the path for the JSON file
                     $jsonFile = Join-Path $PWD "ScheduleTaskManager.json"
-                  
+
                     # Execute the SELECT query and convert the result to JSON
                     $query = "SELECT * FROM ScheduleTaskManager FOR JSON AUTO"
                     $output = sqlcmd -S $env:SQL_SERVER_DATA -U $env:SQL_USER -P $env:SQL_PASSWORD -d $env:SQL_DATABASE_IODS -Q $query -h -1 -W | Where-Object { $_ -notmatch 'rows affected' }
@@ -130,143 +130,147 @@ jobs:
                         exit 1
                     }
 
-                    # Convert output to JSON format
-                    $jsonContentRaw = $output -join "`n"
+                    # Convert output to JSON format and remove extra spaces
+                    $jsonContentRaw = $output -join "`n" | ConvertFrom-Json | ConvertTo-Json -Compress
 
                     # Save the output to a JSON file
                     $jsonContentRaw | Out-File -Encoding utf8 $jsonFile
                     Write-Output "✅ Data exported successfully to $jsonFile"
 
-                    # Save the JSON content in a GitHub Actions environment variable
-                    "SCHEDULE_TASKS_JSON=$jsonContentRaw" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+                    # Encode JSON to Base64 to prevent corruption issues
+                    $jsonBase64 = [Convert]::ToBase64String([System.Text.Encoding]::UTF8.GetBytes($jsonContentRaw))
 
-                    # Print confirmation message
-                    Write-Output "📂 JSON stored in GitHub Actions environment variable: SCHEDULE_TASKS_JSON"
-                                
+                    # Save the Base64-encoded JSON in a GitHub Actions environment variable
+                    "SCHEDULE_TASKS_JSON=$jsonBase64" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+
+                    Write-Output "📂 JSON stored in GitHub Actions environment variable (Base64 encoded): SCHEDULE_TASKS_JSON"
+
                     # Execute the UPDATE query to set Active column to 0 (deactivate tasks)
                     Write-Output "Deactivating tasks by updating Active column to 0..."
                     $updateQuery = "UPDATE ScheduleTaskManager SET Active = 0"
                     $updateOutput = sqlcmd -S $env:SQL_SERVER_DATA -U $env:SQL_USER -P $env:SQL_PASSWORD -d $env:SQL_DATABASE_IODS -Q $updateQuery
-                  
+
                     # Check for errors in the update execution
                     if ($updateOutput -match 'Msg \d+, Level \d+, State \d+, Server .+, Line \d+') {
                         Write-Error "❌ Error deactivating tasks: $updateOutput"
                         exit 1
-                    }             
-                    Write-Output "✅ Tasks deactivated successfully"
-                } 
-                catch {
-                    # Handle any unexpected errors
-                    Write-Error "❌ Failed to process ScheduleTaskManager: $($_.Exception.Message)"
-                    exit 1
-                }
-    
-      - name: 🏃‍♂️‍➡️ Execute SQL scripts in the Auto_opsDataStore database
-        shell: pwsh
-        run: |     
-            $folders = Get-ChildItem -Path $env:PATH_RELEASE_IODS -Recurse -Directory | Sort-Object FullName
-            
-            foreach ($folder in $folders) {
-              if ($folder.Name -notmatch '^\d') {
-                Write-Output "Skipping folder (no number in name): $($folder.FullName)"
-                continue
-              }
-              Write-Output "Processing folder: $($folder.FullName)"
-              $sqlFiles = Get-ChildItem -Path $folder.FullName -Filter *.sql | Sort-Object Name
-            
-              foreach ($file in $sqlFiles) {            
-                try {
-                  Write-Output "Executing $($file.FullName)..."
-                  $output = sqlcmd -S $env:SQL_SERVER_DATA -U $env:SQL_USER -P $env:SQL_PASSWORD -d $env:SQL_DATABASE_IODS -i $file.FullName 2>&1
-                  Write-Output "Result of $($file.Name):"
-                  if ($output -match 'Msg \d+, Level \d+, State \d+, Server .+, Line \d+') {
-                    Write-Output "❗Error executing $($file.Name): $output"
-                  } 
-                  else {
-                    Write-Output "✅ Successfully executed $($file.Name)"
-                  }
-                } catch {
-                  Write-Error "❌ Failed to execute $($file.Name): $($_.Exception.Message)"
-                }
-              }
-            }
-      
-      - name: 🏃‍♂️‍➡️ Execute SQL scripts in the GBDB database
-        shell: pwsh
-        run: |     
-                $folders = Get-ChildItem -Path $env:PATH_RELEASE_PROFICY -Recurse -Directory | Sort-Object FullName
-                
-                foreach ($folder in $folders) {
-                  if ($folder.Name -notmatch '^\d') {
-                    Write-Output "Skipping folder (no number in name): $($folder.FullName)"
-                    continue
-                  }
-                  Write-Output "Processing folder: $($folder.FullName)"
-                  $sqlFiles = Get-ChildItem -Path $folder.FullName -Filter *.sql | Sort-Object Name
-                
-                  foreach ($file in $sqlFiles) {            
-                    try {
-                      Write-Output "Executing $($file.FullName)..."
-                      $output = sqlcmd -S $env:SQL_SERVER_DATA -U $env:SQL_USER -P $env:SQL_PASSWORD -d $env:SQL_DATABASE_PROFICY -i $file.FullName 2>&1
-                      Write-Output "Result of $($file.Name):"
-                      if ($output -match 'Msg \d+, Level \d+, State \d+, Server .+, Line \d+') {
-                        Write-Output "❗Error executing $($file.Name): $output"
-                      } 
-                      else {
-                        Write-Output "✅ Successfully executed $($file.Name)"
-                      }
-                    } catch {
-                      Write-Error "❌ Failed to execute $($file.Name): $($_.Exception.Message)"
                     }
-                  }
-                }
-  
-      - name: 🔄 Update Active Status in ScheduleTaskManager
-        shell: pwsh
-        run: |
-                try {
-                    Write-Output "📥 Reading JSON from environment variable..."
-               
-                    Write-Output "Raw JSON content: $env:SCHEDULE_TASKS_JSON"
-        
-                    # Get the JSON from the environment variable
-                    $jsonContentRaw = $env:SCHEDULE_TASKS_JSON
-                    Write-Output "Raw JSON length: $($jsonContentRaw.Length)"
 
-                    # Convert the JSON into a PowerShell object array
-                    $tasks = $jsonContentRaw | ConvertFrom-Json
+                    Write-Output "✅ Tasks deactivated successfully"
+              } 
+              catch {
+                  # Handle any unexpected errors
+                  Write-Error "❌ Failed to process ScheduleTaskManager: $($_.Exception.Message)"
+                  exit 1
+              }
+
+    
+      # - name: 🏃‍♂️‍➡️ Execute SQL scripts in the Auto_opsDataStore database
+      #   shell: pwsh
+      #   run: |     
+      #       $folders = Get-ChildItem -Path $env:PATH_RELEASE_IODS -Recurse -Directory | Sort-Object FullName
+            
+      #       foreach ($folder in $folders) {
+      #         if ($folder.Name -notmatch '^\d') {
+      #           Write-Output "Skipping folder (no number in name): $($folder.FullName)"
+      #           continue
+      #         }
+      #         Write-Output "Processing folder: $($folder.FullName)"
+      #         $sqlFiles = Get-ChildItem -Path $folder.FullName -Filter *.sql | Sort-Object Name
+            
+      #         foreach ($file in $sqlFiles) {            
+      #           try {
+      #             Write-Output "Executing $($file.FullName)..."
+      #             $output = sqlcmd -S $env:SQL_SERVER_DATA -U $env:SQL_USER -P $env:SQL_PASSWORD -d $env:SQL_DATABASE_IODS -i $file.FullName 2>&1
+      #             Write-Output "Result of $($file.Name):"
+      #             if ($output -match 'Msg \d+, Level \d+, State \d+, Server .+, Line \d+') {
+      #               Write-Output "❗Error executing $($file.Name): $output"
+      #             } 
+      #             else {
+      #               Write-Output "✅ Successfully executed $($file.Name)"
+      #             }
+      #           } catch {
+      #             Write-Error "❌ Failed to execute $($file.Name): $($_.Exception.Message)"
+      #           }
+      #         }
+      #       }
+      
+      # - name: 🏃‍♂️‍➡️ Execute SQL scripts in the GBDB database
+      #   shell: pwsh
+      #   run: |     
+      #           $folders = Get-ChildItem -Path $env:PATH_RELEASE_PROFICY -Recurse -Directory | Sort-Object FullName
+                
+      #           foreach ($folder in $folders) {
+      #             if ($folder.Name -notmatch '^\d') {
+      #               Write-Output "Skipping folder (no number in name): $($folder.FullName)"
+      #               continue
+      #             }
+      #             Write-Output "Processing folder: $($folder.FullName)"
+      #             $sqlFiles = Get-ChildItem -Path $folder.FullName -Filter *.sql | Sort-Object Name
+                
+      #             foreach ($file in $sqlFiles) {            
+      #               try {
+      #                 Write-Output "Executing $($file.FullName)..."
+      #                 $output = sqlcmd -S $env:SQL_SERVER_DATA -U $env:SQL_USER -P $env:SQL_PASSWORD -d $env:SQL_DATABASE_PROFICY -i $file.FullName 2>&1
+      #                 Write-Output "Result of $($file.Name):"
+      #                 if ($output -match 'Msg \d+, Level \d+, State \d+, Server .+, Line \d+') {
+      #                   Write-Output "❗Error executing $($file.Name): $output"
+      #                 } 
+      #                 else {
+      #                   Write-Output "✅ Successfully executed $($file.Name)"
+      #                 }
+      #               } catch {
+      #                 Write-Error "❌ Failed to execute $($file.Name): $($_.Exception.Message)"
+      #               }
+      #             }
+      #           }
+  
+      # - name: 🔄 Update Active Status in ScheduleTaskManager
+      #   shell: pwsh
+      #   run: |
+      #           try {
+      #               Write-Output "📥 Reading JSON from environment variable..."
+               
+      #               Write-Output "Raw JSON content: $env:SCHEDULE_TASKS_JSON"
         
-                    # Check if there are tasks in the JSON
-                    if (-not $tasks) {
-                        Write-Output "⚠️ No tasks found in JSON."
-                        exit 0
-                    }
+      #               # Get the JSON from the environment variable
+      #               $jsonContentRaw = $env:SCHEDULE_TASKS_JSON
+      #               Write-Output "Raw JSON length: $($jsonContentRaw.Length)"
+
+      #               # Convert the JSON into a PowerShell object array
+      #               $tasks = $jsonContentRaw | ConvertFrom-Json
         
-                    # Iterate through each JSON object and execute the UPDATE query
-                    foreach ($task in $tasks) {
-                        $id = $task.Id
-                        $active = [int]$task.Active  # Convert boolean to 0 or 1
+      #               # Check if there are tasks in the JSON
+      #               if (-not $tasks) {
+      #                   Write-Output "⚠️ No tasks found in JSON."
+      #                   exit 0
+      #               }
         
-                        Write-Output "🔄 Updating ScheduleTaskManager: Id=$id, Active=$active"
+      #               # Iterate through each JSON object and execute the UPDATE query
+      #               foreach ($task in $tasks) {
+      #                   $id = $task.Id
+      #                   $active = [int]$task.Active  # Convert boolean to 0 or 1
         
-                        $updateQuery = "UPDATE ScheduleTaskManager SET Active = $active WHERE Id = $id"
+      #                   Write-Output "🔄 Updating ScheduleTaskManager: Id=$id, Active=$active"
         
-                        # Execute the SQL query
-                        $updateOutput = sqlcmd -S $env:SQL_SERVER_DATA -U $env:SQL_USER -P $env:SQL_PASSWORD -d $env:SQL_DATABASE_IODS -Q $updateQuery -h -1 -W
+      #                   $updateQuery = "UPDATE ScheduleTaskManager SET Active = $active WHERE Id = $id"
         
-                        # Check for errors in the SQL execution
-                        if ($updateOutput -match 'Msg \d+, Level \d+, State \d+, Server .+, Line \d+') {
-                            Write-Error "❌ Error updating Id=" + $id + ": " + $updateOutput
-                            exit 1
-                        }
-                    }
+      #                   # Execute the SQL query
+      #                   $updateOutput = sqlcmd -S $env:SQL_SERVER_DATA -U $env:SQL_USER -P $env:SQL_PASSWORD -d $env:SQL_DATABASE_IODS -Q $updateQuery -h -1 -W
         
-                    Write-Output "✅ All tasks updated successfully."
+      #                   # Check for errors in the SQL execution
+      #                   if ($updateOutput -match 'Msg \d+, Level \d+, State \d+, Server .+, Line \d+') {
+      #                       Write-Error "❌ Error updating Id=" + $id + ": " + $updateOutput
+      #                       exit 1
+      #                   }
+      #               }
         
-                } catch {
-                    Write-Error "❌ Failed to update ScheduleTaskManager: $($_.Exception.Message)"
-                    exit 1
-                }
+      #               Write-Output "✅ All tasks updated successfully."
+        
+      #           } catch {
+      #               Write-Error "❌ Failed to update ScheduleTaskManager: $($_.Exception.Message)"
+      #               exit 1
+      #           }
               
 
   api-deployment:
