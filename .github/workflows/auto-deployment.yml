@@ -122,23 +122,29 @@ jobs:
 
                     # Execute the SELECT query and convert the result to JSON
                     $query = "SELECT * FROM ScheduleTaskManager FOR JSON AUTO"
-                    $output = sqlcmd -S $env:SQL_SERVER_DATA -U $env:SQL_USER -P $env:SQL_PASSWORD -d $env:SQL_DATABASE_IODS -Q $query -h -1 -W | Where-Object { $_ -notmatch 'rows affected' }
+                    $output = sqlcmd -S $env:SQL_SERVER_DATA -U $env:SQL_USER -P $env:SQL_PASSWORD -d $env:SQL_DATABASE_IODS -Q $query -b -r 1 | Where-Object { $_ -notmatch 'rows affected' }
 
-                    # Check for errors in the SQL query execution
-                    if ($output -match 'Msg \d+, Level \d+, State \d+, Server .+, Line \d+') {
-                        Write-Error "❌ Error fetching data: $output"
+                    # Convert output to JSON format and sanitize it
+                    $jsonContentRaw = $output -join "`n"
+
+                    # Log the raw JSON output for debugging
+                    Write-Output "📜 Raw JSON output: $jsonContentRaw"
+
+                    # Validate and clean JSON
+                    try {
+                        $jsonParsed = $jsonContentRaw | ConvertFrom-Json
+                        $jsonContentClean = $jsonParsed | ConvertTo-Json -Compress
+                    } catch {
+                        Write-Error "❌ JSON conversion failed: $($_.Exception.Message)"
                         exit 1
                     }
 
-                    # Convert output to JSON format and remove extra spaces
-                    $jsonContentRaw = $output -join "`n" | ConvertFrom-Json | ConvertTo-Json -Compress
-
-                    # Save the output to a JSON file
-                    $jsonContentRaw | Out-File -Encoding utf8 $jsonFile
+                    # Save the cleaned JSON to a file
+                    $jsonContentClean | Out-File -Encoding utf8 $jsonFile
                     Write-Output "✅ Data exported successfully to $jsonFile"
 
                     # Encode JSON to Base64 to prevent corruption issues
-                    $jsonBase64 = [Convert]::ToBase64String([System.Text.Encoding]::UTF8.GetBytes($jsonContentRaw))
+                    $jsonBase64 = [Convert]::ToBase64String([System.Text.Encoding]::UTF8.GetBytes($jsonContentClean))
 
                     # Save the Base64-encoded JSON in a GitHub Actions environment variable
                     "SCHEDULE_TASKS_JSON=$jsonBase64" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
@@ -157,12 +163,13 @@ jobs:
                     }
 
                     Write-Output "✅ Tasks deactivated successfully"
-              } 
-              catch {
-                  # Handle any unexpected errors
-                  Write-Error "❌ Failed to process ScheduleTaskManager: $($_.Exception.Message)"
-                  exit 1
-              }
+                } 
+                catch {
+                    # Handle any unexpected errors
+                    Write-Error "❌ Failed to process ScheduleTaskManager: $($_.Exception.Message)"
+                    exit 1
+                }
+
 
     
       # - name: 🏃‍♂️‍➡️ Execute SQL scripts in the Auto_opsDataStore database
