@@ -116,7 +116,7 @@ jobs:
         run: |
             $jsonFile = Join-Path $env:GITHUB_WORKSPACE "ScheduleTaskManager.json"
             Write-Output "Exporting ScheduleTaskManager to JSON..."
-            bcp "SELECT * FROM ScheduleTaskManager FOR JSON AUTO" queryout "$jsonFile" -S $env:SQL_SERVER_DATA -U $env:SQL_USER -P $env:SQL_PASSWORD -d $env:SQL_DATABASE_IODS -c -t,
+            bcp "SELECT * FROM ScheduleTaskManager FOR JSON AUTO" queryout "$jsonFile" -S $env:SQL_SERVER_DATA -U $env:SQL_USER -P $env:SQL_PASSWORD -d $env:SQL_DATABASE_IODS -c
         
       - name: 🛠️ Deactivate Tasks
         shell: pwsh
