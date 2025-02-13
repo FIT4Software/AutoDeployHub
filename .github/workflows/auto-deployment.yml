@@ -120,40 +120,31 @@ jobs:
                 # Define the path for the JSON file
                 $jsonFile = Join-Path $env:GITHUB_WORKSPACE "ScheduleTaskManager.json"
               
-                # Execute the SELECT query and convert the result to JSON
+                # Ejecutar la consulta con opciones para evitar truncamientos
                 $query = "SELECT * FROM ScheduleTaskManager FOR JSON AUTO"
-                $output = sqlcmd -S $env:SQL_SERVER_DATA -U $env:SQL_USER -P $env:SQL_PASSWORD -d $env:SQL_DATABASE_IODS -Q $query -h -1 -W | Where-Object { $_ -notmatch 'rows affected' }
+                $output = sqlcmd -S $env:SQL_SERVER_DATA -U $env:SQL_USER -P $env:SQL_PASSWORD -d $env:SQL_DATABASE_IODS -Q $query -h -1 -W -s"" -y 0 | Where-Object { $_ -notmatch 'rows affected' }
         
-                # Check for errors in the SQL query execution
+                # Verifica si hubo error en la consulta SQL
                 if ($output -match 'Msg \d+, Level \d+, State \d+, Server .+, Line \d+') {
                     Write-Error "❌ Error fetching data: $output"
                     exit 1
                 }
         
-                # Convert output to JSON format
+                # Guardar el JSON sin cortes
                 $jsonContentRaw = $output -join "`n"
         
-                # Save the output to a JSON file
+                # Guardar el archivo JSON
                 $jsonContentRaw | Out-File -Encoding utf8 $jsonFile
                 Write-Output "✅ Data exported successfully to $jsonFile"
-        
-                # Execute the UPDATE query to set Active column to 0 (deactivate tasks)
-                Write-Output "Deactivating tasks by updating Active column to 0..."
-                $updateQuery = "UPDATE ScheduleTaskManager SET Active = 0"
-                $updateOutput = sqlcmd -S $env:SQL_SERVER_DATA -U $env:SQL_USER -P $env:SQL_PASSWORD -d $env:SQL_DATABASE_IODS -Q $updateQuery
-              
-                # Check for errors in the update execution
-                if ($updateOutput -match 'Msg \d+, Level \d+, State \d+, Server .+, Line \d+') {
-                    Write-Error "❌ Error deactivating tasks: $updateOutput"
-                    exit 1
-                }             
-                Write-Output "✅ Tasks deactivated successfully"
+                
+                # Subir como artifact
+                Write-Output "📤 Uploading JSON as artifact..."
             } 
             catch {
-                # Handle any unexpected errors
                 Write-Error "❌ Failed to process ScheduleTaskManager: $($_.Exception.Message)"
                 exit 1
             }
+        
         
       - name: 📤 Upload JSON as artifact (Optional)
         uses: actions/upload-artifact@v4 
