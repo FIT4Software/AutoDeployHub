@@ -2,7 +2,7 @@ name: iods-auto-deploy
 
 on:
   push:
-    branches: ["main"]
+    branches: ["Task_9"]
   workflow_dispatch:
 
 jobs:
