@@ -17,6 +17,7 @@ jobs:
       SQL_DATABASE_PROFICY: ""
       PATH_RELEASE_PROFICY: ""
       SCHEDULE_TASKS_JSON: ""
+      IODS_API: ""
 
     steps:
       - name: ⚙️ Checkout code
@@ -276,10 +277,21 @@ jobs:
       - name: Checkout repo
         uses: actions/checkout@v3
 
+      - name: 📄 Load configuration from JSON
+        shell: pwsh
+        run: |
+          # read JSON file
+          $config = Get-Content -Raw -Path "config.json" | ConvertFrom-Json
+
+          # Check JSON file
+          Write-Output "Config Loaded: $($config | ConvertTo-Json -Depth 3)"
+
+          "IODS_API=$($config.IODS_API)" | Out-File -FilePath $env:GITHUB_ENV -Append
+
       - name: Extract API-iODS.zip
         run: |
           echo "Desplegando API en IIS..."
-          Expand-Archive -Path API-iODS.zip -DestinationPath "C:\inetpub\wwwroot\API-iODS"
+          Expand-Archive -Path "$env:IODS_API/API-iODS.zip" -DestinationPath "C:\inetpub\wwwroot\API-iODS"
 
       - name: Configure IIS Site
         run: |
