@@ -2,7 +2,7 @@ name: iods-auto-deploy
 
 on:
   push:
-    branches: ["main"]
+    branches: ["API-1"]
   workflow_dispatch:
 
 jobs:
@@ -222,6 +222,7 @@ jobs:
           }
 
       - name: 🔄 Update Active Status in ScheduleTaskManager
+        if: false
         shell: pwsh
         run: |
           try {
@@ -275,6 +276,39 @@ jobs:
       - name: Checkout repo
         uses: actions/checkout@v3
 
-      - name: Deploy API to IIS
+      - name: Extract API-iODS.zip
         run: |
           echo "Desplegando API en IIS..."
+          Expand-Archive -Path API-iODS.zip -DestinationPath "C:\inetpub\wwwroot\API-iODS"
+
+      - name: Configure IIS Site
+        run: |
+          Import-Module WebAdministration
+          New-WebApplication -Site "Default Web Site" -Name "API-iODS" -PhysicalPath "C:\inetpub\wwwroot\API-iODS" -ApplicationPool "NET v4.5 iODS"
+
+      - name: Update Web.config
+        run: |
+          $configPath = "C:\inetpub\wwwroot\API-iODS\Web.config"
+          (Get-Content $configPath) -replace 'data source=.*?;', 'data source=CNSG-MESDTA2BR.int.pg.com;' | Set-Content $configPath
+
+      - name: Update WhiteList.json
+        run: |
+          $whitelistPath = "C:\inetpub\wwwroot\API-iODS\WhiteList.json"
+          (Invoke-WebRequest -Uri "https://github.com/DMO/IODS/blob/b7c13f3fd96f9b8981240ce054099c5b553b84a1/Documentation/Install%20Documentation/whitelist.json" -UseBasicParsing).Content | Set-Content $whitelistPath
+
+      - name: Run AppPoolCreation.ps1
+        run: |
+          Start-Process -FilePath "powershell.exe" -ArgumentList "-ExecutionPolicy Bypass -File AppPoolCreation.ps1" -NoNewWindow -Wait
+
+      - name: Configure IIS Authentication
+        run: |
+          Import-Module WebAdministration
+          Set-WebConfigurationProperty -Filter "/system.webServer/security/authentication/anonymousAuthentication" -Name "userName" -Value ""
+
+      - name: Configure IIS Application Pool
+        run: |
+          Set-ItemProperty "IIS:\AppPools\NET v4.5 iODS" -Name processModel.identityType -Value ApplicationPoolIdentity
+
+      - name: Restart IIS
+        run: |
+          iisreset
