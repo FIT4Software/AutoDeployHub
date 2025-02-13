@@ -70,7 +70,7 @@ jobs:
             Write-Output "Checking database connection..."
             $output = sqlcmd -S $env:SQL_SERVER_DATA -U $env:SQL_USER -P $env:SQL_PASSWORD -Q "SELECT 1" 2>&1
             if ($output -match 'Msg \d+, Level \d+, State \d+, Server .+, Line \d+') {
-              Write-Error "❌ database connection failed: $output"
+              Write-Error "❌ Database connection failed: $output"
               exit 1
             }
             Write-Output "✅ Database connection successful"
