@@ -20,7 +20,7 @@ jobs:
 
     steps:
       - name: ⚙️ Checkout code
-        uses: actions/upload-artifact@v4
+        uses: actions/checkout@v3
 
       - name: 📄 Load configuration from JSON
         shell: pwsh
@@ -156,7 +156,7 @@ jobs:
             }
         
       - name: 📤 Upload JSON as artifact (Optional)
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4 
         with:
           name: schedule-task-manager-json
           path: ${{ github.workspace }}/ScheduleTaskManager.json
