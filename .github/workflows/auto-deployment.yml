@@ -2,7 +2,7 @@ name: iods-auto-deploy
 
 on:
   push:
-    branches: ["main"]
+    branches: ["Task_10"]
   workflow_dispatch:
 
 jobs:
@@ -114,12 +114,30 @@ jobs:
       - name: 📥 Save ScheduleTaskManager to JSON with BCP
         shell: pwsh
         run: |
-          $jsonFile = Join-Path $env:GITHUB_WORKSPACE "ScheduleTaskManager.json"
-          Write-Output "Exporting ScheduleTaskManager to JSON..."
-          bcp "SELECT * FROM ScheduleTaskManager FOR JSON AUTO" queryout "$jsonFile" -S $env:SQL_SERVER_DATA -U $env:SQL_USER -P $env:SQL_PASSWORD -d $env:SQL_DATABASE_IODS -c
+            $jsonFile = Join-Path $env:GITHUB_WORKSPACE "ScheduleTaskManager.json"
+            Write-Output "🔄 Overwriting ScheduleTaskManager.json with query output..."
 
-          $jsonContent = Get-Content -Path $jsonFile -Raw
-          "SCHEDULE_TASKS_JSON=$jsonContent" | Out-File -FilePath $env:GITHUB_ENV -Append
+            try {
+                # Execute the query and save the output in the existing file
+                bcp "SELECT * FROM ScheduleTaskManager FOR JSON AUTO" queryout "$jsonFile" -S $env:SQL_SERVER_DATA -U $env:SQL_USER -P $env:SQL_PASSWORD -d $env:SQL_DATABASE_IODS -c
+
+                # Verify that the file has been successfully overwritten
+                if (!(Test-Path $jsonFile)) {
+                    throw "Error: Failed to overwrite ScheduleTaskManager.json."
+                }
+
+                # Read and validate the file content
+                $jsonContent = Get-Content -Path $jsonFile -Raw
+                if ([string]::IsNullOrWhiteSpace($jsonContent)) {
+                    throw "Error: The JSON file is empty after export."
+                }
+
+                Write-Output "✅ ScheduleTaskManager.json successfully updated."
+
+            } catch {
+                Write-Error "❌ Error while overwriting ScheduleTaskManager.json: $_"
+                exit 1  # Stop the workflow if an error occurs
+            }
 
       - name: 🛠️ Deactivate Tasks
         shell: pwsh
