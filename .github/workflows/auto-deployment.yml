@@ -17,6 +17,7 @@ jobs:
       SQL_DATABASE_PROFICY: ""
       PATH_RELEASE_PROFICY: ""
       SCHEDULE_TASKS_JSON: ""
+      USER_ROLE_SECURITY: ""
 
     steps:
       - name: ⚙️ Checkout code
@@ -111,7 +112,7 @@ jobs:
             exit 1
           }
 
-      - name: 📥 Save ScheduleTaskManager to JSON with BCP
+      - name: 📥 Save schedule task manager to JSON with BCP
         shell: pwsh
         run: |
           $jsonFile = Join-Path $env:GITHUB_WORKSPACE "ScheduleTaskManager.json"
@@ -240,6 +241,16 @@ jobs:
               Write-Error "❌ Failed to update ScheduleTaskManager: $($_.Exception.Message)"
               exit 1
           }
+      
+      - name: 📥 Save user role security to JSON with BCP
+        shell: pwsh
+        run: |
+          $jsonFile = Join-Path $env:GITHUB_WORKSPACE "UserRoleSecurity.json"
+          Write-Output "Exporting UserRoleSecurity to JSON..."
+          bcp "SELECT * FROM User_Role_Security FOR JSON AUTO" queryout "$jsonFile" -S $env:SQL_SERVER_DATA -U $env:SQL_USER -P $env:SQL_PASSWORD -d $env:SQL_DATABASE_PROFICY -c
+
+          $jsonContent = Get-Content -Path $jsonFile -Raw
+          "USER_ROLE_SECURITY=$jsonContent" | Out-File -FilePath $env:GITHUB_ENV -Append
 
   api-deployment:
     runs-on: windows-latest
