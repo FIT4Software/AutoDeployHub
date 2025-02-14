@@ -129,9 +129,9 @@ jobs:
                     Write-Output "Error: The JSON file is empty."
                 }
             } else {
-                Write-Output "Error: The JSON file was not created."
+              Write-Output "Error: The JSON file was not created."
+            }
         
-
       - name: 🛠️ Deactivate Tasks
         shell: pwsh
         run: |
