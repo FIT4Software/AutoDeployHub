@@ -114,30 +114,32 @@ jobs:
       - name: 📥 Save ScheduleTaskManager to JSON with BCP
         shell: pwsh
         run: |
-            $jsonFile = Join-Path $env:GITHUB_WORKSPACE "ScheduleTaskManager.json"
-            Write-Output "🔄 Overwriting ScheduleTaskManager.json with query output..."
+          $jsonFile = Join-Path $env:GITHUB_WORKSPACE "ScheduleTaskManager.json"
+          $tempFile = Join-Path $env:GITHUB_WORKSPACE "temp_output.json"
+          Write-Output "🔄 Exporting query result to a temporary JSON file..."
 
-            try {
-                # Execute the query and save the output in the existing file
-                bcp "SELECT * FROM ScheduleTaskManager FOR JSON AUTO" queryout "$jsonFile" -S $env:SQL_SERVER_DATA -U $env:SQL_USER -P $env:SQL_PASSWORD -d $env:SQL_DATABASE_IODS -c
+          try {
+              # Execute the query and save the output to a temporary file
+              bcp "SELECT * FROM ScheduleTaskManager FOR JSON AUTO" queryout "$tempFile" -S $env:SQL_SERVER_DATA -U $env:SQL_USER -P $env:SQL_PASSWORD -d $env:SQL_DATABASE_IODS -w
 
-                # Verify that the file has been successfully overwritten
-                if (!(Test-Path $jsonFile)) {
-                    throw "Error: Failed to overwrite ScheduleTaskManager.json."
-                }
+              # Verify that the temporary file has content
+              if (!(Test-Path $tempFile)) {
+                  throw "Error: Temporary JSON file was not created."
+              }
 
-                # Read and validate the file content
-                $jsonContent = Get-Content -Path $jsonFile -Raw
-                if ([string]::IsNullOrWhiteSpace($jsonContent)) {
-                    throw "Error: The JSON file is empty after export."
-                }
+              $jsonContent = Get-Content -Path $tempFile -Raw
+              if ([string]::IsNullOrWhiteSpace($jsonContent)) {
+                  throw "Error: The temporary JSON file is empty."
+              }
 
-                Write-Output "✅ ScheduleTaskManager.json successfully updated."
+              # Overwrite the existing ScheduleTaskManager.json file with the new content
+              $jsonContent | Set-Content -Path $jsonFile -Encoding utf8
+              Write-Output "✅ ScheduleTaskManager.json successfully updated."
 
-            } catch {
-                Write-Error "❌ Error while overwriting ScheduleTaskManager.json: $_"
-                exit 1  # Stop the workflow if an error occurs
-            }
+          } catch {
+              Write-Output "❌ Error while exporting JSON: $_"
+              exit 1  # Stop the workflow if an error occurs
+          }
 
       - name: 🛠️ Deactivate Tasks
         shell: pwsh
