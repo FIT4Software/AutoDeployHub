@@ -2,7 +2,7 @@ name: iods-auto-deploy
 
 on:
   push:
-    branches: ["main"]
+    branches: ["Task_10"]
   workflow_dispatch:
 
 jobs:
@@ -17,6 +17,7 @@ jobs:
       SQL_DATABASE_PROFICY: ""
       PATH_RELEASE_PROFICY: ""
       SCHEDULE_TASKS_JSON: ""
+      USER_ROLE_SECURITY_JSON: ""
 
     steps:
       - name: ⚙️ Checkout code
@@ -111,16 +112,26 @@ jobs:
             exit 1
           }
 
-      - name: 📥 Save ScheduleTaskManager to JSON with BCP
+      - name: 📥 Save schedule task manager to JSON with BCP
         shell: pwsh
         run: |
-          $jsonFile = Join-Path $env:GITHUB_WORKSPACE "ScheduleTaskManager.json"
-          Write-Output "Exporting ScheduleTaskManager to JSON..."
-          bcp "SELECT * FROM ScheduleTaskManager FOR JSON AUTO" queryout "$jsonFile" -S $env:SQL_SERVER_DATA -U $env:SQL_USER -P $env:SQL_PASSWORD -d $env:SQL_DATABASE_IODS -c
-
-          $jsonContent = Get-Content -Path $jsonFile -Raw
-          "SCHEDULE_TASKS_JSON=$jsonContent" | Out-File -FilePath $env:GITHUB_ENV -Append
-
+            $jsonFile = Join-Path $env:GITHUB_WORKSPACE "ScheduleTaskManager.json"
+            Write-Output "Exporting ScheduleTaskManager to JSON..."
+            bcp "SELECT * FROM ScheduleTaskManager FOR JSON AUTO" queryout "$jsonFile" -S $env:SQL_SERVER_DATA -U $env:SQL_USER -P $env:SQL_PASSWORD -d $env:SQL_DATABASE_IODS -c
+        
+            if (Test-Path $jsonFile) {
+                $jsonContent = Get-Content -Path $jsonFile -Raw
+                if (![string]::IsNullOrWhiteSpace($jsonContent)) {
+                    "SCHEDULE_TASKS_JSON=$jsonContent" | Out-File -FilePath $env:GITHUB_ENV -Append
+                    Write-Output "SCHEDULE_TASKS_JSON content:"
+                    Write-Output $jsonContent
+                } else {
+                    Write-Output "Error: The JSON file is empty."
+                }
+            } else {
+              Write-Output "Error: The JSON file was not created."
+            }
+        
       - name: 🛠️ Deactivate Tasks
         shell: pwsh
         run: |
@@ -240,6 +251,27 @@ jobs:
               Write-Error "❌ Failed to update ScheduleTaskManager: $($_.Exception.Message)"
               exit 1
           }
+      
+      - name: 📥 Save user role security to JSON with BCP
+        shell: pwsh
+        run: |
+            $jsonFile = Join-Path $env:GITHUB_WORKSPACE "UserRoleSecurity.json"
+            Write-Output "Exporting UserRoleSecurity to JSON..."
+            bcp "SELECT * FROM User_Role_Security FOR JSON AUTO" queryout "$jsonFile" -S $env:SQL_SERVER_DATA -U $env:SQL_USER -P $env:SQL_PASSWORD -d $env:SQL_DATABASE_PROFICY -c
+        
+            if (Test-Path $jsonFile) {
+                $jsonContent = Get-Content -Path $jsonFile -Raw
+                if (![string]::IsNullOrWhiteSpace($jsonContent)) {
+                    "USER_ROLE_SECURITY=$jsonContent" | Out-File -FilePath $env:GITHUB_ENV -Append
+                    Write-Output "USER_ROLE_SECURITY content:"
+                    Write-Output $jsonContent
+                } else {
+                    Write-Output "Error: The JSON file is empty."
+                }
+            } else {
+                Write-Output "Error: The JSON file was not created."
+            }
+        
 
   api-deployment:
     runs-on: windows-latest
@@ -250,4 +282,4 @@ jobs:
 
       - name: Deploy API to IIS
         run: |
-          echo "Desplegando API en IIS...."
+          echo "Desplegando API en IIS..."
