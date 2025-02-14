@@ -115,38 +115,11 @@ jobs:
         shell: pwsh
         run: |
           $jsonFile = Join-Path $env:GITHUB_WORKSPACE "ScheduleTaskManager.json"
-          $tempFile = Join-Path $env:GITHUB_WORKSPACE "temp_output.json"
-          Write-Output "🔄 Exporting query result to a temporary JSON file..."
+          Write-Output "Exporting ScheduleTaskManager to JSON..."
+          bcp "SELECT * FROM ScheduleTaskManager FOR JSON AUTO" queryout "$jsonFile" -S $env:SQL_SERVER_DATA -U $env:SQL_USER -P $env:SQL_PASSWORD -d $env:SQL_DATABASE_IODS -c
 
-          try {
-              # Execute the query and save the output to a temporary file
-              bcp "SELECT * FROM ScheduleTaskManager FOR JSON AUTO" queryout "$tempFile" -S $env:SQL_SERVER_DATA -U $env:SQL_USER -P $env:SQL_PASSWORD -d $env:SQL_DATABASE_IODS -w
-
-              # Verify that the temporary file has content
-              if (!(Test-Path $tempFile)) {
-                  throw "Error: Temporary JSON file was not created."
-              }
-
-              $jsonContent = Get-Content -Path $tempFile -Raw
-              if ([string]::IsNullOrWhiteSpace($jsonContent)) {
-                  throw "Error: The temporary JSON file is empty."
-              }
-
-              # Print the content of the temporary JSON file for debugging
-              Write-Output "🔍 Temporary JSON file content: $jsonContent"
-
-              # Confirm content before writing
-              Write-Output "🔄 Preparing to write content to the final JSON file..."
-
-              # Overwrite the existing ScheduleTaskManager.json file with the new content
-              $jsonContent | Out-File -FilePath $jsonFile -Encoding utf8 -Force
-              Write-Output "✅ ScheduleTaskManager.json successfully updated."
-
-          } catch {
-              Write-Output "❌ Error while exporting JSON: $_"
-              exit 1  # Stop the workflow if an error occurs
-          }
-
+          $jsonContent = Get-Content -Path $jsonFile -Raw
+          "SCHEDULE_TASKS_JSON=$jsonContent" | Out-File -FilePath $env:GITHUB_ENV -Append
 
       - name: 🛠️ Deactivate Tasks
         shell: pwsh
