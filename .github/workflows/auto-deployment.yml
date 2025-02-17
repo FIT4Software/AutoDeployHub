@@ -293,6 +293,11 @@ jobs:
           echo "Desplegando API en IIS..."
           Expand-Archive -Path "$env:IODS_API/API-iODS.zip" -DestinationPath "C:\inetpub\wwwroot\API-iODS"
 
+      - name: Debug - List extracted files
+        run: |
+          Get-ChildItem -Path "C:\inetpub\wwwroot\API-iODS" -Recurse
+        shell: pwsh
+
       - name: Configure IIS Site
         run: |
           Import-Module WebAdministration
