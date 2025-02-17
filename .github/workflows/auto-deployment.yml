@@ -308,9 +308,9 @@ jobs:
       - name: 🔌 Connect to IIS Server
         shell: pwsh
         run: |
-          $securePassword = ConvertTo-SecureString "${{ env.RPT_SERVER_PASS }}" -AsPlainText -Force
-          $credential = New-Object PSCredential ("${{ env.RPT_SERVER_USER }}", $securePassword)
-          Test-WSMan -ComputerName "${{ env.RPT_SERVER }}" -Credential $credential
+          $securePassword = ConvertTo-SecureString "$env:RPT_SERVER_PASS" -AsPlainText -Force
+          $credential = New-Object PSCredential ("$env:RPT_SERVER_USER", $securePassword)
+          Enter-PSSession -ComputerName "$env:RPT_SERVER" -Credential $credential
 
       # - name: Extract API-iODS.zip
       #   run: |
