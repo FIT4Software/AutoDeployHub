@@ -279,6 +279,7 @@ jobs:
 
       - name: 📄 Load configuration from JSON
         shell: pwsh
+        id: load_config
         run: |
           # read JSON file
           $config = Get-Content -Raw -Path "config.json" | ConvertFrom-Json
@@ -286,46 +287,80 @@ jobs:
           # Check JSON file
           Write-Output "Config Loaded: $($config | ConvertTo-Json -Depth 3)"
 
-          "IODS_API=$($config.IODS_API)" | Out-File -FilePath $env:GITHUB_ENV -Append
+          $RPT_SERVER = $config.RPT_SERVER
+          $RPT_SERVER_USER = $config.RPT_SERVER_USER
+          $RPT_SERVER_PASSWORD = $config.RPT_SERVER_PASS
+          $IODS_API = $config.IODS_API
 
-      - name: Extract API-iODS.zip
-        run: |
-          echo "Desplegando API en IIS..."
-          Expand-Archive -Path "$env:IODS_API/API-iODS.zip" -DestinationPath "C:\inetpub\wwwroot\API-iODS"
+          # Assign JSON values to environment variables
+          Add-Content -Path $env:GITHUB_ENV -Value "RPT_SERVER=$RPT_SERVER"
+          Add-Content -Path $env:GITHUB_ENV -Value "RPT_SERVER_USER=$RPT_SERVER_USER"
+          Add-Content -Path $env:GITHUB_ENV -Value "RPT_SERVER_PASS=$RPT_SERVER_PASS"
+          Add-Content -Path $env:GITHUB_ENV -Value "IODS_API=$API_IODS"
 
-      - name: Debug - List extracted files
-        run: |
-          Get-ChildItem -Path "C:\inetpub\wwwroot\API-iODS" -Recurse
+      # - name: 📄 Load configuration from JSON
+      #   shell: pwsh
+      #   run: |
+      #     # read JSON file
+      #     $config = Get-Content -Raw -Path "config.json" | ConvertFrom-Json
+
+      #     # Check JSON file
+      #     Write-Output "Config Loaded: $($config | ConvertTo-Json -Depth 3)"
+
+      #     "IODS_API=$($config.IODS_API)" | Out-File -FilePath $env:GITHUB_ENV -Append
+
+      - name: Debug - Show Loaded Variables
         shell: pwsh
-
-      - name: Configure IIS Site
         run: |
-          Import-Module WebAdministration
-          New-WebApplication -Site "Default Web Site" -Name "API-iODS" -PhysicalPath "C:\inetpub\wwwroot\API-iODS" -ApplicationPool "NET v4.5 iODS"
+          Write-Output "RPT_SERVER: $env:RPT_SERVER"
+          Write-Output "RPT_SERVER_USER: $env:RPT_SERVER_USER"
+          Write-Output "RPT_SERVER_PASS: $env:RPT_SERVER_PASS"
 
-      - name: Update Web.config
+      - name: 🔌 Connect to IIS Server
+        shell: pwsh
         run: |
-          $configPath = "C:\inetpub\wwwroot\API-iODS\Web.config"
-          (Get-Content $configPath) -replace 'data source=.*?;', 'data source=CNSG-MESDTA2BR.int.pg.com;' | Set-Content $configPath
+          $securePassword = ConvertTo-SecureString "${{ env.RPT_SERVER_PASS }}" -AsPlainText -Force
+          $credential = New-Object PSCredential ("${{ env.RPT_SERVER_USER }}", $securePassword)
+          Test-WSMan -ComputerName "${{ env.RPT_SERVER }}" -Credential $credential
 
-      - name: Update WhiteList.json
-        run: |
-          $whitelistPath = "C:\inetpub\wwwroot\API-iODS\WhiteList.json"
-          (Invoke-WebRequest -Uri "https://github.com/DMO/IODS/blob/b7c13f3fd96f9b8981240ce054099c5b553b84a1/Documentation/Install%20Documentation/whitelist.json" -UseBasicParsing).Content | Set-Content $whitelistPath
+      # - name: Extract API-iODS.zip
+      #   run: |
+      #     echo "Desplegando API en IIS..."
+      #     Expand-Archive -Path "$env:IODS_API/API-iODS.zip" -DestinationPath "C:\inetpub\wwwroot\API-iODS"
 
-      - name: Run AppPoolCreation.ps1
-        run: |
-          Start-Process -FilePath "powershell.exe" -ArgumentList "-ExecutionPolicy Bypass -File AppPoolCreation.ps1" -NoNewWindow -Wait
+      # - name: Debug - List extracted files
+      #   run: |
+      #     Get-ChildItem -Path "C:\inetpub\wwwroot\API-iODS" -Recurse
+      #   shell: pwsh
 
-      - name: Configure IIS Authentication
-        run: |
-          Import-Module WebAdministration
-          Set-WebConfigurationProperty -Filter "/system.webServer/security/authentication/anonymousAuthentication" -Name "userName" -Value ""
+      # - name: Configure IIS Site
+      #   run: |
+      #     Import-Module WebAdministration
+      #     New-WebApplication -Site "Default Web Site" -Name "API-iODS" -PhysicalPath "C:\inetpub\wwwroot\API-iODS" -ApplicationPool "NET v4.5 iODS"
 
-      - name: Configure IIS Application Pool
-        run: |
-          Set-ItemProperty "IIS:\AppPools\NET v4.5 iODS" -Name processModel.identityType -Value ApplicationPoolIdentity
+      # - name: Update Web.config
+      #   run: |
+      #     $configPath = "C:\inetpub\wwwroot\API-iODS\Web.config"
+      #     (Get-Content $configPath) -replace 'data source=.*?;', 'data source=CNSG-MESDTA2BR.int.pg.com;' | Set-Content $configPath
 
-      - name: Restart IIS
-        run: |
-          iisreset
+      # - name: Update WhiteList.json
+      #   run: |
+      #     $whitelistPath = "C:\inetpub\wwwroot\API-iODS\WhiteList.json"
+      #     (Invoke-WebRequest -Uri "https://github.com/DMO/IODS/blob/b7c13f3fd96f9b8981240ce054099c5b553b84a1/Documentation/Install%20Documentation/whitelist.json" -UseBasicParsing).Content | Set-Content $whitelistPath
+
+      # - name: Run AppPoolCreation.ps1
+      #   run: |
+      #     Start-Process -FilePath "powershell.exe" -ArgumentList "-ExecutionPolicy Bypass -File AppPoolCreation.ps1" -NoNewWindow -Wait
+
+      # - name: Configure IIS Authentication
+      #   run: |
+      #     Import-Module WebAdministration
+      #     Set-WebConfigurationProperty -Filter "/system.webServer/security/authentication/anonymousAuthentication" -Name "userName" -Value ""
+
+      # - name: Configure IIS Application Pool
+      #   run: |
+      #     Set-ItemProperty "IIS:\AppPools\NET v4.5 iODS" -Name processModel.identityType -Value ApplicationPoolIdentity
+
+      # - name: Restart IIS
+      #   run: |
+      #     iisreset
