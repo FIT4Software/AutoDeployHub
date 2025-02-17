@@ -305,12 +305,12 @@ jobs:
           Write-Output "RPT_SERVER_USER: $env:RPT_SERVER_USER"
           Write-Output "RPT_SERVER_PASS: $env:RPT_SERVER_PASS"
 
-      # - name: 🔌 Connect to IIS Server
-      #   shell: pwsh
-      #   run: |
-      #     $securePassword = ConvertTo-SecureString "$env:RPT_SERVER_PASS" -AsPlainText -Force
-      #     $credential = New-Object PSCredential ("$env:RPT_SERVER_USER", $securePassword)
-      #     Enter-PSSession -ComputerName "$env:RPT_SERVER" -Credential $credential
+      - name: 🔌 Connect to IIS Server
+        shell: pwsh
+        run: |
+          $securePassword = ConvertTo-SecureString "$env:RPT_SERVER_PASS" -AsPlainText -Force
+          $credential = New-Object PSCredential ("$env:RPT_SERVER_USER", $securePassword)
+          Enter-PSSession -ComputerName "$env:RPT_SERVER" -Credential $credential
 
       # - name: Extract API-iODS.zip
       #   run: |
