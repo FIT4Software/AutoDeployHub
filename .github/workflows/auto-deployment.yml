@@ -289,7 +289,7 @@ jobs:
 
           $RPT_SERVER = $config.RPT_SERVER
           $RPT_SERVER_USER = $config.RPT_SERVER_USER
-          $RPT_SERVER_PASSWORD = $config.RPT_SERVER_PASS
+          $RPT_SERVER_PASS = $config.RPT_SERVER_PASS
           $IODS_API = $config.IODS_API
 
           # Assign JSON values to environment variables
@@ -297,17 +297,6 @@ jobs:
           Add-Content -Path $env:GITHUB_ENV -Value "RPT_SERVER_USER=$RPT_SERVER_USER"
           Add-Content -Path $env:GITHUB_ENV -Value "RPT_SERVER_PASS=$RPT_SERVER_PASS"
           Add-Content -Path $env:GITHUB_ENV -Value "IODS_API=$API_IODS"
-
-      # - name: 📄 Load configuration from JSON
-      #   shell: pwsh
-      #   run: |
-      #     # read JSON file
-      #     $config = Get-Content -Raw -Path "config.json" | ConvertFrom-Json
-
-      #     # Check JSON file
-      #     Write-Output "Config Loaded: $($config | ConvertTo-Json -Depth 3)"
-
-      #     "IODS_API=$($config.IODS_API)" | Out-File -FilePath $env:GITHUB_ENV -Append
 
       - name: Debug - Show Loaded Variables
         shell: pwsh
