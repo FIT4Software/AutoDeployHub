@@ -311,7 +311,7 @@ jobs:
           unzip PSTools.zip -d PSTools
           chmod +x PSTools/PsExec64.exe
 
-          ./PSTools/PsExec64.exe -accepteula -s \\${{ env.RPT_SERVER }} -u ${{ env.RPT_SERVER_USER }} -p ${{ env.RPT_SERVER_PASS }} -s powershell -Command "
+          ./PSTools/PsExec64.exe -accepteula -s \\${{ env.RPT_SERVER }} cmd /c "
             Write-Host 'Configuring WinRM...';
             winrm quickconfig -quiet;
             winrm set winrm/config/service '@{AllowUnencrypted=`"true`"}';
