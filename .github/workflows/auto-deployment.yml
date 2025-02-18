@@ -41,8 +41,6 @@ jobs:
 
           # Assign JSON values to environment variables
           Add-Content -Path $env:GITHUB_ENV -Value "SQL_SERVER_DATA=$SQL_SERVER_DATA"
-          Add-Content -Path $env:GITHUB_ENV -Value "SQL_USER=$SQL_USER"
-          Add-Content -Path $env:GITHUB_ENV -Value "SQL_PASSWORD=$SQL_PASSWORD"
           Add-Content -Path $env:GITHUB_ENV -Value "SQL_DATABASE_IODS=$SQL_DATABASE_IODS"
           Add-Content -Path $env:GITHUB_ENV -Value "PATH_RELEASE_IODS=$PATH_RELEASE_IODS"
           Add-Content -Path $env:GITHUB_ENV -Value "SQL_DATABASE_PROFICY=$SQL_DATABASE_PROFICY"
