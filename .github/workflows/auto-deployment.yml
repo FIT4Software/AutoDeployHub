@@ -305,6 +305,10 @@ jobs:
           Write-Output "RPT_SERVER_USER: $env:RPT_SERVER_USER"
           Write-Output "RPT_SERVER_PASS: $env:RPT_SERVER_PASS"
 
+      - name: Test Connection to Server
+        run: |
+          ping -c 4  "${{ env.RPT_SERVER }}" || echo "⚠ No ping response"
+
       - name: Connect to RPT Server and Deploy API
         shell: pwsh
         run: |
