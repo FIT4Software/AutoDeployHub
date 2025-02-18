@@ -305,12 +305,46 @@ jobs:
           Write-Output "RPT_SERVER_USER: $env:RPT_SERVER_USER"
           Write-Output "RPT_SERVER_PASS: $env:RPT_SERVER_PASS"
 
-      - name: 🔌 Connect to IIS Server
-        shell: pwsh
+      - name: Generate SSH Key
         run: |
-          $securePassword = ConvertTo-SecureString "$env:RPT_SERVER_PASS" -AsPlainText -Force
-          $credential = New-Object PSCredential ("$env:RPT_SERVER_USER", $securePassword)
-          Enter-PSSession -ComputerName "$env:RPT_SERVER" -Credential $credential
+          ssh-keygen -t rsa -b 4096 -f private _key -N ""
+          mv private_key private_key.pub
+          mv provate_key.pub public_key.pub
+          chmod 600 private_key.pem
+
+      - name: Enable SSH on Remote Server (via WinRM)
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ env.RPT_SERVER }}
+          username: ${{ env.RPT_SERVER_USER }}
+          password: ${{ env.RPT_SERVER_PASS }}
+          script: |
+            Write-Host "Installing OpenSSH Server..."
+            Get-WindowsFeature -Name OpenSSH-Server | Install-WindowsFeature
+            Start-Service sshd
+            Set-Service -Name sshd -StartupType Automatic
+            New-NetFirewallRule -Protocol TCP -LocalPort 22 -Direction Inbound -Action Allow -DisplayName "SSH"
+
+      - name: Add SSH Key to Remote Server
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ env.RPT_SERVER }}
+          username: ${{ env.RPT_SERVER_USER }}
+          password: ${{ env.RPT_SERVER_PASS }}
+          script: |
+            mkdir -Force C:\Users\${{ env.RPT_SERVER_USER }}\.ssh
+            echo "${{ env.SSH_PUBLIC_KEY }}" >> C:\Users\${{ env.RPT_SERVER_USER }}\.ssh\authorized_keys
+            icacls C:\Users\${{ env.RPT_SERVER_USER }}\.ssh\authorized_keys /inheritance:r
+            icacls C:\Users\${{ env.RPT_SERVER_USER }}\.ssh\authorized_keys /grant "${{ env.RPT_SERVER_USER }}:F"
+
+      # - name: Setup SSH Key
+      #   run: |
+      #     echo "${{ secrets.SSH_KEY }}" > private_key.pem
+      #     chmod 600 private_key.pem
+
+      - name: Copy files using SCP
+        run: |
+          scp -i private_key.pem -o StrictHostKeyChecking=no -r API-iODS.zip AppPoolCreation.ps1 ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:"C:/Users/Public/Desktop/"
 
       # - name: Extract API-iODS.zip
       #   run: |
