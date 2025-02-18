@@ -305,133 +305,61 @@ jobs:
           Write-Output "RPT_SERVER_USER: $env:RPT_SERVER_USER"
           Write-Output "RPT_SERVER_PASS: $env:RPT_SERVER_PASS"
 
-      - name: Install PsExec and Configure WinRM on Remote Server
-        run: |
-          curl -O https://download.sysinternals.com/files/PSTools.zip
-          unzip PSTools.zip -d PSTools
-          chmod +x PSTools/PsExec64.exe
-
-          ./PSTools/PsExec64.exe -accepteula -u ${{ env.RPT_SERVER_USER }} -p ${{ env.RPT_SERVER_PASS }} \\${{ env.RPT_SERVER }} cmd /c "
-            Write-Host 'Configuring WinRM...';
-            winrm quickconfig -quiet;
-            winrm set winrm/config/service '@{AllowUnencrypted=`"true`"}';
-            winrm set winrm/config/service/auth '@{Basic=`"true`"}';
-            Set-Item WSMan:\localhost\Client\TrustedHosts -Value * -Force;
-            Restart-Service WinRM;
-          "
-
-      - name: Verify WinRM Connection
-        shell: pwsh
-        run: |
-          $securePassword = ConvertTo-SecureString "${{ env.RPT_SERVER_PASS }}" -AsPlainText -Force
-          $credential = New-Object System.Management.Automation.PSCredential ("${{ env.RPT_SERVER_USER }}", $securePassword)
-
-          Invoke-Command -ComputerName "${{ env.RPT_SERVER }}" -Credential $credential -Authentication Negotiate -ScriptBlock {
-              Write-Host "WinRM is now working!"
-          }
-
-      - name: Generate SSH Key
-        shell: bash
-        run: |
-          if [ ! -f "private_key.pem" ]; then
-            echo "Generating SSH Key..."
-            ssh-keygen -t rsa -b 4096 -f private_key -N "" || exit 1
-            if [ -f "private_key.pub" ]; then
-              mv private_key private_key.pem
-              mv private_key.pub public_key.pub
-            else
-              echo "Error: SSH public key not generated!"
-              exit 1
-            fi
-          fi
-          chmod 600 private_key.pem
-
-      # - name: Enable SSH on Remote Server (via WinRM)
-      #   uses: appleboy/ssh-action@v1.0.3
-      #   with:
-      #     host: ${{ env.RPT_SERVER }}
-      #     username: ${{ env.RPT_SERVER_USER }}
-      #     password: ${{ env.RPT_SERVER_PASS }}
-      #     script: |
-      #       Write-Host "Installing OpenSSH Server..."
-      #       Get-WindowsFeature -Name OpenSSH-Server | Install-WindowsFeature
-      #       Start-Service sshd
-      #       Set-Service -Name sshd -StartupType Automatic
-      #       New-NetFirewallRule -Protocol TCP -LocalPort 22 -Direction Inbound -Action Allow -DisplayName "SSH"
-
-      - name: Enable SSH on Remote Server (via WinRM)
+      - name: Connect to RPT Server and Deploy API
         shell: pwsh
         run: |
           $securePassword = ConvertTo-SecureString "${{ env.RPT_SERVER_PASS }}" -AsPlainText -Force
           $credential = New-Object System.Management.Automation.PSCredential ("${{ env.RPT_SERVER_USER }}", $securePassword)
 
           Invoke-Command -ComputerName "${{ env.RPT_SERVER }}" -Credential $credential -ScriptBlock {
-            Write-Host "Installing OpenSSH Server..."
-            Install-WindowsFeature -Name OpenSSH-Server
-            Start-Service sshd
-            Set-Service -Name sshd -StartupType Automatic
-            New-NetFirewallRule -Protocol TCP -LocalPort 22 -Direction Inbound -Action Allow -DisplayName "SSH"
+            Write-Host "🔹 Connecting to file server and downloading release files..."
+                
+            # Descargar archivos desde el servidor de archivos
+            $networkPath = "\\brtc-mslab019.na.pg.com\mot\MES Releases\Release 2024.1\IODS\2024-09-10\DMO_4_4_2_22-RELEASE-SOA26"
+            $localPath = "C:\Users\Public\Desktop\Deployment"
+            if (-Not (Test-Path $localPath)) {
+               New-Item -ItemType Directory -Path $localPath
+            }
+
+            Copy-Item -Path "$networkPath\*" -Destination $localPath -Recurse -Force
+            Write-Host "✅ Files copied to $localPath"
+
+            # Extraer ZIP de API
+            Expand-Archive -Path "$localPath\DMO_4_4_2_22-RELEASE-SOA26-WebServer\API-iODS.zip" -DestinationPath "C:\inetpub\wwwroot\API-iODS" -Force
+
+            # Abrir IIS y desplegar la API
+            Import-Module WebAdministration
+            Write-Host "🌍 Deploying API to IIS..."
+            if (-Not (Test-Path IIS:\Sites\"Default Web Site\API-iODS")) {
+              New-WebApplication -Name "API-iODS" -Site "Default Web Site" -PhysicalPath "C:\inetpub\wwwroot\API-iODS" -ApplicationPool "DefaultAppPool"
+            }
+
+            # Configurar Web.config
+            Write-Host "🛠 Updating Web.config..."
+            $webConfig = "C:\inetpub\wwwroot\API-iODS\Web.config"
+            (Get-Content $webConfig) -replace "CNSG-MESDTA2BR.int.pg.com", "${{ env.DATA_SOURCE }}" | Set-Content $webConfig
+
+            # Descargar y actualizar WhiteList.json
+            Write-Host "📋 Updating WhiteList.json..."
+            $whiteList = "C:\inetpub\wwwroot\API-iODS\WhiteList.json"
+            Invoke-WebRequest -Uri "https://github.com/DMO/IODS/blob/main/Documentation/Install%20Documentation/whitelist.json" -OutFile $whiteList
+
+            # Ejecutar AppPoolCreation.ps1
+            Write-Host "⚙ Running AppPoolCreation.ps1..."
+            powershell -ExecutionPolicy Bypass -File "$localPath\AppPoolCreation.ps1"
+
+            # Configurar autenticación en IIS
+            Write-Host "🔑 Configuring Authentication..."
+            Set-WebConfigurationProperty -Filter "/system.webServer/security/authentication/anonymousAuthentication" -Name enabled -Value false -PSPath IIS:\ -Location "Default Web Site/API-iODS"
+            Set-WebConfigurationProperty -Filter "/system.webServer/security/authentication/windowsAuthentication" -Name enabled -Value true -PSPath IIS:\ -Location "Default Web Site/API-iODS"
+
+            # Verificar si la API está en ejecución
+            Write-Host "✅ Checking API status..."
+            $response = Invoke-WebRequest -Uri "https://CNSG-MESRPT2BR.int.pg.com/API-IODS/api/Filter/getlines" -UseBasicParsing
+            if ($response.StatusCode -eq 200) {
+                Write-Host "✅ API is running successfully!"
+            } else {
+                Write-Host "❌ API deployment failed!"
+                exit 1
+            }
           }
-
-      - name: Add SSH Key to Remote Server
-        uses: appleboy/ssh-action@v1.0.3
-        with:
-          host: ${{ env.RPT_SERVER }}
-          username: ${{ env.RPT_SERVER_USER }}
-          password: ${{ env.RPT_SERVER_PASS }}
-          script: |
-            mkdir -Force C:\Users\${{ env.RPT_SERVER_USER }}\.ssh
-            echo "${{ env.SSH_PUBLIC_KEY }}" >> C:\Users\${{ env.RPT_SERVER_USER }}\.ssh\authorized_keys
-            icacls C:\Users\${{ env.RPT_SERVER_USER }}\.ssh\authorized_keys /inheritance:r
-            icacls C:\Users\${{ env.RPT_SERVER_USER }}\.ssh\authorized_keys /grant "${{ env.RPT_SERVER_USER }}:F"
-
-      # - name: Setup SSH Key
-      #   run: |
-      #     echo "${{ secrets.SSH_KEY }}" > private_key.pem
-      #     chmod 600 private_key.pem
-
-      - name: Copy files using SCP
-        run: |
-          scp -i private_key.pem -o StrictHostKeyChecking=no -r API-iODS.zip AppPoolCreation.ps1 ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:"C:/Users/Public/Desktop/"
-
-      # - name: Extract API-iODS.zip
-      #   run: |
-      #     echo "Desplegando API en IIS..."
-      #     Expand-Archive -Path "$env:IODS_API/API-iODS.zip" -DestinationPath "C:\inetpub\wwwroot\API-iODS"
-
-      # - name: Debug - List extracted files
-      #   run: |
-      #     Get-ChildItem -Path "C:\inetpub\wwwroot\API-iODS" -Recurse
-      #   shell: pwsh
-
-      # - name: Configure IIS Site
-      #   run: |
-      #     Import-Module WebAdministration
-      #     New-WebApplication -Site "Default Web Site" -Name "API-iODS" -PhysicalPath "C:\inetpub\wwwroot\API-iODS" -ApplicationPool "NET v4.5 iODS"
-
-      # - name: Update Web.config
-      #   run: |
-      #     $configPath = "C:\inetpub\wwwroot\API-iODS\Web.config"
-      #     (Get-Content $configPath) -replace 'data source=.*?;', 'data source=CNSG-MESDTA2BR.int.pg.com;' | Set-Content $configPath
-
-      # - name: Update WhiteList.json
-      #   run: |
-      #     $whitelistPath = "C:\inetpub\wwwroot\API-iODS\WhiteList.json"
-      #     (Invoke-WebRequest -Uri "https://github.com/DMO/IODS/blob/b7c13f3fd96f9b8981240ce054099c5b553b84a1/Documentation/Install%20Documentation/whitelist.json" -UseBasicParsing).Content | Set-Content $whitelistPath
-
-      # - name: Run AppPoolCreation.ps1
-      #   run: |
-      #     Start-Process -FilePath "powershell.exe" -ArgumentList "-ExecutionPolicy Bypass -File AppPoolCreation.ps1" -NoNewWindow -Wait
-
-      # - name: Configure IIS Authentication
-      #   run: |
-      #     Import-Module WebAdministration
-      #     Set-WebConfigurationProperty -Filter "/system.webServer/security/authentication/anonymousAuthentication" -Name "userName" -Value ""
-
-      # - name: Configure IIS Application Pool
-      #   run: |
-      #     Set-ItemProperty "IIS:\AppPools\NET v4.5 iODS" -Name processModel.identityType -Value ApplicationPoolIdentity
-
-      # - name: Restart IIS
-      #   run: |
-      #     iisreset
