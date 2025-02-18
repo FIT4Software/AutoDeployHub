@@ -307,7 +307,7 @@ jobs:
 
       - name: Generate SSH Key
         run: |
-          ssh-keygen -t rsa -b 4096 -f private _key -N ""
+          ssh-keygen -t rsa -b 4096 -f private_key -N ""
           mv private_key private_key.pub
           mv provate_key.pub public_key.pub
           chmod 600 private_key.pem
