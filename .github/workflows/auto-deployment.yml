@@ -2,7 +2,7 @@ name: iods-auto-deploy
 
 on:
   push:
-    branches: ["add-Secrets"]
+    branches: ["main"]
   workflow_dispatch:
 
 jobs:
