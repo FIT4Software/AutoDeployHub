@@ -311,6 +311,7 @@ jobs:
           $securePassword = ConvertTo-SecureString "${{ env.RPT_SERVER_PASS }}" -AsPlainText -Force
           $credential = New-Object System.Management.Automation.PSCredential ("${{ env.RPT_SERVER_USER }}", $securePassword)
 
+          Set-Item WSMan:\localhost\Client\TrustedHosts -Value * -Force
           Invoke-Command -ComputerName "${{ env.RPT_SERVER }}" -Credential $credential -ScriptBlock {
             Write-Host "🔹 Connecting to file server and downloading release files..."
                 
