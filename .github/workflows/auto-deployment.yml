@@ -306,6 +306,7 @@ jobs:
           Write-Output "RPT_SERVER_PASS: $env:RPT_SERVER_PASS"
 
       - name: Generate SSH Key
+        shell: bash
         run: |
           if [ ! -f "private_key.pem"]; then
             ssh-keygen -t rsa -b 4096 -f private_key -N ""
