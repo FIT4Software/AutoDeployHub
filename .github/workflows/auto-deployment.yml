@@ -321,18 +321,32 @@ jobs:
           fi
           chmod 600 private_key.pem
 
+      # - name: Enable SSH on Remote Server (via WinRM)
+      #   uses: appleboy/ssh-action@v1.0.3
+      #   with:
+      #     host: ${{ env.RPT_SERVER }}
+      #     username: ${{ env.RPT_SERVER_USER }}
+      #     password: ${{ env.RPT_SERVER_PASS }}
+      #     script: |
+      #       Write-Host "Installing OpenSSH Server..."
+      #       Get-WindowsFeature -Name OpenSSH-Server | Install-WindowsFeature
+      #       Start-Service sshd
+      #       Set-Service -Name sshd -StartupType Automatic
+      #       New-NetFirewallRule -Protocol TCP -LocalPort 22 -Direction Inbound -Action Allow -DisplayName "SSH"
+
       - name: Enable SSH on Remote Server (via WinRM)
-        uses: appleboy/ssh-action@v1.0.3
-        with:
-          host: ${{ env.RPT_SERVER }}
-          username: ${{ env.RPT_SERVER_USER }}
-          password: ${{ env.RPT_SERVER_PASS }}
-          script: |
+        shell: pwsh
+        run: |
+          $securePassword = ConvertTo-SecureString "${{ env.RPT_SERVER_PASS }}" -AsPlainText -Force
+          $credential = New-Object System.Management.Automation.PSCredential ("${{ env.RPT_SERVER_USER }}", $securePassword)
+
+          Invoke-Command -ComputerName "${{ env.RPT_SERVER }}" -Credential $credential -ScriptBlock {
             Write-Host "Installing OpenSSH Server..."
-            Get-WindowsFeature -Name OpenSSH-Server | Install-WindowsFeature
+            Install-WindowsFeature -Name OpenSSH-Server
             Start-Service sshd
             Set-Service -Name sshd -StartupType Automatic
             New-NetFirewallRule -Protocol TCP -LocalPort 22 -Direction Inbound -Action Allow -DisplayName "SSH"
+          }
 
       - name: Add SSH Key to Remote Server
         uses: appleboy/ssh-action@v1.0.3
