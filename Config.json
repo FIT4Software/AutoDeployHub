@@ -7,7 +7,7 @@
   "SQL_DATABASE_PROFICY": "Auto_GBDB",
   "PATH_RELEASE_PROFICY": "HTML5 - 220 - SQL",
 
-  "RPT_SERVER": "dev-lab8-app",
+  "RPT_SERVER": "dev-lab8-app.na.pg.com",
   "RPT_SERVER_USER": "la\\sosa.fe.1",
   "RPT_SERVER_PASS": "AridoArido_15",
   "IODS_API": "IODS - API"
