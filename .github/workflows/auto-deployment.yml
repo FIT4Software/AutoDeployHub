@@ -309,10 +309,16 @@ jobs:
         shell: bash
         run: |
           if [ ! -f "private_key.pem" ]; then
-            ssh-keygen -t rsa -b 4096 -f private_key -N ""
+            echo "Generating SSH Key..."
+            ssh-keygen -t rsa -b 4096 -f private_key -N "" || exit 1
+            if [ -f "private_key.pub" ]; then
+              mv private_key private_key.pem
+              mv private_key.pub public_key.pub
+            else
+              echo "Error: SSH public key not generated!"
+              exit 1
+            fi
           fi
-          mv private_key private_key.pub
-          mv provate_key.pub public_key.pub
           chmod 600 private_key.pem
 
       - name: Enable SSH on Remote Server (via WinRM)
