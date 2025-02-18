@@ -305,6 +305,31 @@ jobs:
           Write-Output "RPT_SERVER_USER: $env:RPT_SERVER_USER"
           Write-Output "RPT_SERVER_PASS: $env:RPT_SERVER_PASS"
 
+          - name: Install PsExec and Configure WinRM on Remote Server
+          run: |
+            curl -O https://download.sysinternals.com/files/PSTools.zip
+            unzip PSTools.zip -d PSTools
+            chmod +x PSTools/PsExec64.exe
+
+            ./PSTools/PsExec64.exe \\${{ env.RPT_SERVER }} -u ${{ env.RPT_SERVER_USER }} -p ${{ env.RPT_SERVER_PASS }} -s powershell -Command "
+              Write-Host 'Configuring WinRM...';
+              winrm quickconfig -quiet;
+              winrm set winrm/config/service '@{AllowUnencrypted=`"true`"}';
+              winrm set winrm/config/service/auth '@{Basic=`"true`"}';
+              Set-Item WSMan:\localhost\Client\TrustedHosts -Value * -Force;
+              Restart-Service WinRM;
+            "
+
+      - name: Verify WinRM Connection
+        shell: pwsh
+        run: |
+          $securePassword = ConvertTo-SecureString "${{ env.RPT_SERVER_PASS }}" -AsPlainText -Force
+          $credential = New-Object System.Management.Automation.PSCredential ("${{ env.RPT_SERVER_USER }}", $securePassword)
+
+          Invoke-Command -ComputerName "${{ env.RPT_SERVER }}" -Credential $credential -Authentication Negotiate -ScriptBlock {
+              Write-Host "WinRM is now working!"
+          }
+
       - name: Generate SSH Key
         shell: bash
         run: |
