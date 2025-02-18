@@ -2,7 +2,7 @@ name: iods-auto-deploy
 
 on:
   push:
-    branches: ["Task_10"]
+    branches: ["main"]
   workflow_dispatch:
 
 jobs:
@@ -10,8 +10,8 @@ jobs:
     runs-on: windows-latest
     env:
       SQL_SERVER_DATA: ""
-      SQL_USER: ""
-      SQL_PASSWORD: ""
+      SQL_USER: ${{ secrets.SQL_USER }}
+      SQL_PASSWORD: ${{ secrets.SQL_PASSWORD }}
       SQL_DATABASE_IODS: ""
       PATH_RELEASE_IODS: ""
       SQL_DATABASE_PROFICY: ""
@@ -34,8 +34,6 @@ jobs:
           Write-Output "Config Loaded: $($config | ConvertTo-Json -Depth 3)"
 
           $SQL_SERVER_DATA = $config.SQL_SERVER_DATA
-          $SQL_USER = $config.SQL_USER
-          $SQL_PASSWORD = $config.SQL_PASSWORD
           $SQL_DATABASE_IODS = $config.SQL_DATABASE_IODS
           $PATH_RELEASE_IODS = $config.PATH_RELEASE_IODS
           $SQL_DATABASE_PROFICY = $config.SQL_DATABASE_PROFICY
@@ -43,8 +41,6 @@ jobs:
 
           # Assign JSON values to environment variables
           Add-Content -Path $env:GITHUB_ENV -Value "SQL_SERVER_DATA=$SQL_SERVER_DATA"
-          Add-Content -Path $env:GITHUB_ENV -Value "SQL_USER=$SQL_USER"
-          Add-Content -Path $env:GITHUB_ENV -Value "SQL_PASSWORD=$SQL_PASSWORD"
           Add-Content -Path $env:GITHUB_ENV -Value "SQL_DATABASE_IODS=$SQL_DATABASE_IODS"
           Add-Content -Path $env:GITHUB_ENV -Value "PATH_RELEASE_IODS=$PATH_RELEASE_IODS"
           Add-Content -Path $env:GITHUB_ENV -Value "SQL_DATABASE_PROFICY=$SQL_DATABASE_PROFICY"
@@ -282,4 +278,4 @@ jobs:
 
       - name: Deploy API to IIS
         run: |
-          echo "Desplegando API en IIS..."
+          echo "Desplegando API en IIS....."
