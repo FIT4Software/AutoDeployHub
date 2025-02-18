@@ -10,8 +10,8 @@ jobs:
     runs-on: windows-latest
     env:
       SQL_SERVER_DATA: ""
-      SQL_USER: ""
-      SQL_PASSWORD: ""
+      SQL_USER: ${{ secrets.SQL_USER }}
+      SQL_PASSWORD: ${{ secrets.SQL_PASSWORD }}
       SQL_DATABASE_IODS: ""
       PATH_RELEASE_IODS: ""
       SQL_DATABASE_PROFICY: ""
@@ -34,8 +34,6 @@ jobs:
           Write-Output "Config Loaded: $($config | ConvertTo-Json -Depth 3)"
 
           $SQL_SERVER_DATA = $config.SQL_SERVER_DATA
-          $SQL_USER = $config.SQL_USER
-          $SQL_PASSWORD = $config.SQL_PASSWORD
           $SQL_DATABASE_IODS = $config.SQL_DATABASE_IODS
           $PATH_RELEASE_IODS = $config.PATH_RELEASE_IODS
           $SQL_DATABASE_PROFICY = $config.SQL_DATABASE_PROFICY
