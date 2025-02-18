@@ -306,8 +306,15 @@ jobs:
           Write-Output "RPT_SERVER_PASS: $env:RPT_SERVER_PASS"
 
       - name: Test Connection to Server
+        shell: pwsh
         run: |
-          ping -c 4  "${{ env.RPT_SERVER }}" || echo "⚠ No ping response"
+          $pingResult = Test-Connection -ComputerName 143.22.167.152 -Count 4 -Quiet
+          if ($pingResult) {
+              Write-Host "✅ Server is reachable"
+          } else {
+              Write-Host "⚠ No ping response"
+              exit 1
+          }
 
       - name: Connect to RPT Server and Deploy API
         shell: pwsh
